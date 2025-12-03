@@ -1,0 +1,599 @@
+Loaded dataset with shape: (135651, 2886) (rows, columns)
+
+Categorical column: dataset.code_ascii_txt
+  Unique values: 10
+    'KSSL.SSL' : 63.84%
+    'LUCAS.SSL' : 29.62%
+    'ICRAF.ISRIC' : 3.00%
+    'AFSIS1.SSL' : 1.40%
+    'CAF.SSL' : 1.16%
+    'LUCAS.WOODWELL.SSL' : 0.43%
+    'SCHIEDUNG.SSL' : 0.19%
+    'GARRETT.SSL' : 0.14%
+    'AFSIS2.SSL' : 0.11%
+    'SERBIA.SSL' : 0.10%
+
+Categorical column: id.layer_uuid_txt
+  Unique values: 135651
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: id.layer_local_c
+  Unique values: 135569
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: observation.date.begin_iso.8601_yyyy.mm.dd
+  Unique values: 150
+    '2011-01-01' : 24.04%
+    '2015-03-01' : 16.06%
+    '2009-05-01' : 13.99%
+    '2016-01-01' : 6.27%
+    '2013-01-01' : 3.25%
+    '2009-01-01' : 3.01%
+    '2017-01-01' : 2.95%
+    '2019-01-01' : 2.71%
+    '2018-01-01' : 2.62%
+    '2012-01-01' : 2.55%
+    ... (141 more categories not shown)
+
+Categorical column: observation.date.end_iso.8601_yyyy.mm.dd
+  Unique values: 155
+    '2011-12-31' : 22.63%
+    '2015-10-01' : 16.06%
+    '2012-08-01' : 13.99%
+    '2016-12-31' : 6.27%
+    '2013-12-31' : 4.65%
+    '2009-12-31' : 3.01%
+    '2017-12-31' : 2.95%
+    '2019-12-31' : 2.71%
+    '2012-12-31' : 2.55%
+    '2014-12-31' : 2.51%
+    ... (146 more categories not shown)
+
+Categorical column: surveyor.title_utf8_txt
+  Unique values: 24
+    'USDA NRCS staff' : 63.84%
+    'Institute for Environment and Sustainability (Joint Research Centre)' : 30.05%
+    'Stephan Mantel' : 3.00%
+    'Department of Environmental Systems Science, ETH Zurich, Zurich Switzerland' : 1.16%
+    'L.T.Desta' : 0.37%
+    'Jerome Tondoh' : 0.33%
+    'Marcus Schiedung' : 0.19%
+    'Loretta Garrett' : 0.14%
+    'Vincent, Aduramigba-Modupe (Obafemi Awolowo University)' : 0.11%
+    'Branislav Jović' : 0.10%
+    ... (14 more categories not shown)
+
+Categorical column: id.project_ascii_txt
+  Unique values: 1582
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: id.location_olc_txt
+  Unique values: 50001
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: layer.texture_usda_txt
+  Unique values: 1024
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: pedon.taxa_usda_txt
+  Unique values: 3667
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: horizon.designation_usda_txt
+  Unique values: 2819
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: location.country_iso.3166_txt
+  Unique values: 4
+    'USA' : 63.84%
+    nan : 35.73%
+    'CAN' : 0.19%
+    'NZL' : 0.14%
+    'SRB' : 0.10%
+
+Categorical column: observation.ogc.schema.title_ogc_txt
+  Unique values: 1
+    'Open Soil Spectroscopy Library' : 100.00%
+
+Categorical column: observation.ogc.schema_idn_url
+  Unique values: 1
+    'https://soilspectroscopy.github.io' : 100.00%
+
+Categorical column: surveyor.contact_ietf_email
+  Unique values: 8
+    'rich.ferguson@usda.gov' : 63.84%
+    'ec-esdac@jrc.ec.europa.eu' : 30.05%
+    'stephan.mantel@wur.nl' : 3.00%
+    'afsis.info@africasoils.net' : 1.51%
+    'laura.summerauer@usys.ethz.ch' : 1.16%
+    'marcus.schiedung@geo.uzh.ch' : 0.19%
+    'loretta.garrett@scionresearch.com' : 0.14%
+    'branislav.jovic@dh.uns.ac.rs' : 0.10%
+
+Categorical column: surveyor.address_utf8_txt
+  Unique values: 6
+    'USDA-NRCS-NSSC, Federal Building, Room 152, Mail Stop, 100 Centennial Mall North, Lincoln, NE' : 63.84%
+    nan : 30.05%
+    'ICRAF, PO Box 30677, Nairobi, 00100, Kenya' : 4.52%
+    'Department of Environmental Systems Science, ETH Zurich, Zurich Switzerland' : 1.16%
+    'University of Zurich, Winterthurerstrasse 190, 8057 Zurich, Switzerland' : 0.19%
+    'Scion, Private Bag 3020, Rotorua 3046, New Zealand' : 0.14%
+    'Faculty of Science, University of Novi Sad, Serbia' : 0.10%
+
+Categorical column: dataset.title_utf8_txt
+  Unique values: 9
+    'Kellogg Soil Survey Laboratory database' : 63.84%
+    'LUCAS 2009, 2015 topsoil data' : 30.05%
+    'ICRAF-ISRIC Soil Spectral Library' : 3.00%
+    'Africa Soil Information Service (AfSIS-1)' : 1.40%
+    'The Central African Soil Spectral Library' : 1.16%
+    'Schiedung et al. (2022)' : 0.19%
+    'Garrett et al. (2022)' : 0.14%
+    'TanSIS, NiSIS and GhanSIS (AfSIS-II) SSL' : 0.11%
+    'Jović et al. (2019)' : 0.10%
+
+Categorical column: dataset.owner_utf8_txt
+  Unique values: 9
+    'USDA, Soil and Plant Science Division, National Soil Survey Center' : 63.84%
+    'European Soil Data Centre (ESDAC), European Commission, Joint Research Centre' : 30.05%
+    'World Agroforestry Centre (ICRAF) / ISRIC - World Soil Information' : 3.00%
+    'ICRAF, CROPNUTS, RRES' : 1.40%
+    'ETH Zurich' : 1.16%
+    'Schiedung et al. (2022)' : 0.19%
+    'Garrett et al. (2022)' : 0.14%
+    'the World Agroforestry Centre (ICRAF) and Rothamsted Research (RRES)' : 0.11%
+    'Jović et al. (2019)' : 0.10%
+
+Categorical column: dataset.address_idn_url
+  Unique values: 6
+    'http://ncsslabdatamart.sc.egov.usda.gov/' : 63.84%
+    'https://esdac.jrc.ec.europa.eu/resource-type/soil-point-data' : 30.05%
+    'https://www.isric.org/explore/ISRIC-collections' : 5.68%
+    'https://zenodo.org/record/6024831' : 0.19%
+    'https://doi.org/10.6084/m9.figshare.20506587.v2' : 0.14%
+    'https://doi.org/10.1016/j.saa.2018.08.039' : 0.10%
+
+Categorical column: dataset.doi_idf_url
+  Unique values: 11
+    'https://doi.org/10.2136/sssaj2019.06.0205' : 63.84%
+    'https://data.europa.eu/doi/10.2760/616084' : 16.06%
+    'https://data.europa.eu/doi/10.2788/97922' : 13.99%
+    'https://doi.org/10.34725/DVN/MFHA9C' : 3.00%
+    'https://doi.org/10.1016/j.geodrs.2015.06.002' : 1.40%
+    'https://doi.org/10.5281/zenodo.4351254' : 1.16%
+    'https://doi.org/10.5281/zenodo.6024831' : 0.19%
+    'https://doi.org/10.6084/m9.figshare.20506587.v2' : 0.14%
+    'https://doi.org/10.34725/DVN/WLAKR2' : 0.11%
+    'https://doi.org/10.1016/j.saa.2018.08.039' : 0.10%
+    ... (1 more categories not shown)
+
+Categorical column: dataset.license.title_ascii_txt
+  Unique values: 4
+    'CC-BY' : 68.43%
+    'JRC License Agreement' : 30.05%
+    'ODC Open Database License' : 1.40%
+    'CC0' : 0.11%
+
+Categorical column: dataset.license.address_idn_url
+  Unique values: 6
+    'https://ncsslabdatamart.sc.egov.usda.gov/datause.aspx' : 63.84%
+    'https://esdac.jrc.ec.europa.eu/resource-type/soil-point-data' : 30.05%
+    'https://creativecommons.org/licenses/by/4.0/' : 4.17%
+    'https://opendatacommons.org/licenses/odbl/' : 1.40%
+    'https://creativecommons.org/licenses/by/4.0/legalcode' : 0.43%
+    'https://creativecommons.org/publicdomain/zero/1.0/' : 0.11%
+
+Categorical column: dataset.contact.name_utf8_txt
+  Unique values: 8
+    'Scarlett Murphy' : 63.84%
+    'ESDAC - European Commissiony' : 30.05%
+    'Keith Shepherd' : 4.41%
+    'Laura Summerauer' : 1.16%
+    'Marcus Schiedung' : 0.19%
+    'Loretta Garrett' : 0.14%
+    'Winowiecki, Leigh Ann (ICRAF)' : 0.11%
+    'Branislav Jović' : 0.10%
+
+Categorical column: dataset.contact_ietf_email
+  Unique values: 8
+    'Scarlett.Murphy@usda.gov' : 63.84%
+    'ec-esdac@jrc.ec.europa.eu' : 30.05%
+    'afsis.info@africasoils.net' : 4.41%
+    'laura.summerauer@usys.ethz.ch' : 1.16%
+    'marcus.schiedung@geo.uzh.ch' : 0.19%
+    'loretta.garrett@scionresearch.com' : 0.14%
+    'L.A.WINOWIECKI@cgiar.org' : 0.11%
+    'branislav.jovic@dh.uns.ac.rs' : 0.10%
+
+Categorical column: id.dataset.site_ascii_txt
+  Unique values: 49203
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: efferv_usda.a479_class
+  Unique values: 5
+    'none' : 38.30%
+    nan : 38.22%
+    'very slight' : 9.72%
+    'strong' : 5.25%
+    'slight' : 4.79%
+    'violent' : 3.72%
+
+Categorical column: id.scan_local_c
+  Unique values: 135651
+  NOTE: High-cardinality categorical (> 30). Treating as ID-like; will be dropped.
+
+Categorical column: scan.visnir.date.begin_iso.8601_yyyy.mm.dd
+  Unique values: 185
+    nan : 52.35%
+    '2015-03-01' : 16.06%
+    '2009-05-01' : 13.99%
+    '2004-02-01' : 3.00%
+    '2015-06-02' : 0.22%
+    '2014-04-25' : 0.19%
+    '2015-05-04' : 0.19%
+    '2015-03-12' : 0.19%
+    '2014-10-03' : 0.19%
+    '2015-01-09' : 0.18%
+    ... (176 more categories not shown)
+
+Categorical column: scan.visnir.date.end_iso.8601_yyyy.mm.dd
+  Unique values: 185
+    nan : 52.35%
+    '2015-12-01' : 16.06%
+    '2012-08-01' : 13.99%
+    '2004-11-01' : 3.00%
+    '2015-06-02' : 0.22%
+    '2014-04-25' : 0.19%
+    '2015-05-04' : 0.19%
+    '2015-03-12' : 0.19%
+    '2014-10-03' : 0.19%
+    '2015-01-09' : 0.18%
+    ... (176 more categories not shown)
+
+Categorical column: scan.visnir.model.name_utf8_txt
+  Unique values: 3
+    nan : 52.35%
+    'Metrohm NIRS XDS RapidContent Analyzer' : 30.05%
+    'ASD Labspec 2500' : 14.60%
+    'ASD FieldSpec Pro FR' : 3.00%
+
+Categorical column: scan.visnir.model.code_any_txt
+  Unique values: 3
+    nan : 52.35%
+    'Metrohm_NIRS_XDS_RapidContent_Analyzer' : 30.05%
+    'ASD_Labspec_2500' : 14.60%
+    'ASD_FieldSpec_FR' : 3.00%
+
+Categorical column: scan.visnir.method.optics_any_txt
+  Unique values: 2
+    nan : 82.40%
+    'ASD MugLight' : 14.60%
+    '4.5 W halogen lamp' : 3.00%
+
+Categorical column: scan.visnir.method.preparation_any_txt
+  Unique values: 2
+    nan : 52.35%
+    'Sieved <2 mm' : 44.65%
+    'Sieve <2 mm' : 3.00%
+
+Categorical column: scan.visnir.license.title_ascii_txt
+  Unique values: 2
+    nan : 52.35%
+    'JRC License Agreement' : 30.05%
+    'CC-BY' : 17.60%
+
+Categorical column: scan.visnir.license.address_idn_url
+  Unique values: 4
+    nan : 52.35%
+    'https://esdac.jrc.ec.europa.eu/content/lucas-2015-topsoil-data' : 16.06%
+    'https://www.nrcs.usda.gov/resources/data-and-reports/rapid-carbon-assessment-raca' : 14.60%
+    'https://esdac.jrc.ec.europa.eu/content/lucas-2009-topsoil-data' : 13.99%
+    'https://creativecommons.org/licenses/by/4.0/' : 3.00%
+
+Categorical column: scan.visnir.doi_idf_url
+  Unique values: 4
+    nan : 52.35%
+    'https://data.europa.eu/doi/10.2760/616084' : 16.06%
+    'https://doi.org/10.1007/978-3-319-04084-4_10' : 14.60%
+    'https://data.europa.eu/doi/10.2788/97922' : 13.99%
+    'https://doi.org/10.34725/DVN/MFHA9C' : 3.00%
+
+Categorical column: scan.visnir.contact.name_utf8_txt
+  Unique values: 3
+    nan : 52.35%
+    'ESDAC - European Commission' : 30.05%
+    'Scarlett Murphy' : 14.60%
+    'Keith Shepherd' : 3.00%
+
+Categorical column: scan.visnir.contact.email_ietf_txt
+  Unique values: 3
+    nan : 52.35%
+    'ec-esdac@jrc.ec.europa.eu' : 30.05%
+    'Scarlett.Murphy@usda.gov' : 14.60%
+    'afsis.info@africasoils.net' : 3.00%
+
+Categorical column: scan.mir.date.begin_iso.8601_yyyy.mm.dd
+  Unique values: 1076
+    nan : 44.27%
+    '2004-02-01' : 3.00%
+    '2009-01-01' : 1.40%
+    '2014-01-01' : 1.16%
+    '2019-07-01' : 0.33%
+    '2019-01-01' : 0.21%
+    '2019-06-11' : 0.17%
+    '2019-06-06' : 0.16%
+    '2019-06-12' : 0.14%
+    '2013-07-16' : 0.13%
+    ... (1067 more categories not shown)
+
+Categorical column: scan.mir.date.end_iso.8601_yyyy.mm.dd
+  Unique values: 1075
+    nan : 44.27%
+    '2004-11-01' : 3.00%
+    '2013-12-31' : 1.43%
+    '2018-12-31' : 1.16%
+    '2019-08-31' : 0.33%
+    '2019-12-31' : 0.21%
+    '2019-06-11' : 0.17%
+    '2019-06-06' : 0.16%
+    '2019-06-12' : 0.14%
+    '2013-07-16' : 0.13%
+    ... (1066 more categories not shown)
+
+Categorical column: scan.mir.model.name_utf8_txt
+  Unique values: 7
+    'Bruker Vertex 70 with HTS-XT accessory' : 57.79%
+    nan : 36.83%
+    'Bruker Tensor 27 with HTS-XT accessory' : 4.40%
+    'Bruker Vertex 70 with with PikeAutoDiff accessory' : 0.43%
+    'Bruker Tensor 27' : 0.19%
+    'Bruker Invenio-S with HTS-XT' : 0.14%
+    'Bruker Alpha 1 ZnSe' : 0.11%
+    'ThermoFisher Nicolet Nexus 670' : 0.10%
+
+Categorical column: scan.mir.model.code_any_txt
+  Unique values: 7
+    'Bruker_Vertex_70.HTS.XT' : 57.79%
+    nan : 36.83%
+    'Bruker_Tensor_27.HTS.XT' : 4.40%
+    'Bruker_Vertex_70.PikeAutoDiff' : 0.43%
+    'Bruker_Tensor_27' : 0.19%
+    'Bruker_InvenioS_HTS.XT' : 0.14%
+    'Bruker_Alpha_1_ZnSe' : 0.11%
+    'ThermoFisher_Nicolet_Nexus_670' : 0.10%
+
+Categorical column: scan.mir.method.optics_any_txt
+  Unique values: 5
+    'KBr beamsplitter; MCT detector; Roughened Aluminium background' : 56.63%
+    nan : 39.65%
+    'HgCdTe detector' : 3.00%
+    'KBr beamsplitter; Gold mirror; Mirror background' : 0.43%
+    'Kbr background' : 0.19%
+    'DTGS detector; DRIFT accessory; Gold background' : 0.10%
+
+Categorical column: scan.mir.method.preparation_any_txt
+  Unique values: 4
+    'XS: finely ground <80 mesh' : 41.74%
+    nan : 40.08%
+    'XN: finely ground <80 mesh' : 14.89%
+    'Finely ground <0.1 mm' : 3.00%
+    'Finelly ground <80 mesh' : 0.29%
+
+Categorical column: scan.mir.license.title_ascii_txt
+  Unique values: 2
+    'CC-BY' : 63.05%
+    nan : 36.83%
+    'CC0' : 0.11%
+
+Categorical column: scan.mir.license.address_idn_url
+  Unique values: 3
+    'https://ncsslabdatamart.sc.egov.usda.gov/datause.aspx' : 56.63%
+    nan : 36.83%
+    'https://creativecommons.org/licenses/by/4.0/' : 6.43%
+    'https://creativecommons.org/publicdomain/zero/1.0/' : 0.11%
+
+Categorical column: scan.mir.doi_idf_url
+  Unique values: 9
+    'https://doi.org/10.2136/sssaj2019.06.0205' : 56.63%
+    nan : 36.83%
+    'https://doi.org/10.34725/DVN/MFHA9C' : 3.00%
+    'https://doi.org/10.34725/DVN/QXCWP1' : 1.40%
+    'https://doi.org/10.5281/zenodo.4351254' : 1.16%
+    'https://doi.org/10.3390/s20236729' : 0.43%
+    'https://doi.org/10.5281/zenodo.6024831' : 0.19%
+    'https://doi.org/10.6084/m9.figshare.20506587.v2' : 0.14%
+    'https://doi.org/10.34725/DVN/XUDGJY' : 0.11%
+    'https://doi.org/10.1016/j.saa.2018.08.039' : 0.10%
+
+Categorical column: scan.mir.contact.name_utf8_txt
+  Unique values: 9
+    'Scarlett Murphy' : 56.63%
+    nan : 36.83%
+    'Keith Shepherd' : 3.00%
+    'Vagen, Tor-Gunnar (World Agroforestry)' : 1.40%
+    'Laura Summerauer' : 1.16%
+    'Jonathan Sanderman' : 0.43%
+    'Marcus Schiedung' : 0.19%
+    'Loretta Garrett' : 0.14%
+    'Winowiecki, Leigh Ann (ICRAF)' : 0.11%
+    'Branislav Jović' : 0.10%
+
+Categorical column: scan.mir.contact.email_ietf_txt
+  Unique values: 8
+    'Scarlett.Murphy@usda.gov' : 56.63%
+    nan : 36.83%
+    'afsis.info@africasoils.net' : 4.40%
+    'laura.summerauer@usys.ethz.ch' : 1.16%
+    'jsanderman@woodwellclimate.org' : 0.43%
+    'marcus.schiedung@geo.uzh.ch' : 0.19%
+    'loretta.garrett@scionresearch.com' : 0.14%
+    'L.A.WINOWIECKI@cgiar.org' : 0.11%
+    'branislav.jovic@dh.uns.ac.rs' : 0.10%
+
+=== Column missingness summary (representative spectral columns only) ===
+                                    column   dtype  missing_pct  is_categorical  n_unique
+                    ca.ext_aquaregia_mg.kg float64    99.636567           False       466
+                     al.ext_aquaregia_g.kg float64    99.636567           False       493
+                    na.ext_aquaregia_mg.kg float64    99.636567           False       482
+                    mn.ext_aquaregia_mg.kg float64    99.636567           False       493
+                     fe.ext_aquaregia_g.kg float64    99.636567           False       493
+                    mg.ext_aquaregia_mg.kg float64    99.636567           False       493
+                     k.ext_aquaregia_mg.kg float64    99.636567           False       492
+                     p.ext_aquaregia_mg.kg float64    99.636567           False       493
+                          s.ext_mel3_mg.kg float64    98.486557           False      1248
+                          b.ext_mel3_mg.kg float64    98.457070           False       922
+                      aggstb_usda.a1_w.pct float64    97.627736           False       106
+                   na.ext_usda.a1068_mg.kg float64    97.334336           False      2923
+                   zn.ext_usda.a1073_mg.kg float64    97.228181           False      2565
+                    k.ext_usda.a1065_mg.kg float64    97.219335           False      3049
+                   mn.ext_usda.a1067_mg.kg float64    97.219335           False      3162
+                   cu.ext_usda.a1063_mg.kg float64    97.219335           False      2721
+                   ca.ext_usda.a1059_mg.kg float64    97.218598           False      3260
+                   mg.ext_usda.a1066_mg.kg float64    97.218598           False      3178
+                   fe.ext_usda.a1064_mg.kg float64    97.218598           False      2941
+                   al.ext_usda.a1056_mg.kg float64    97.218598           False      3038
+                  wr.10kPa_usda.a414_w.pct float64    96.970166           False      3571
+                     p.ext_usda.a270_mg.kg float64    94.631813           False      6998
+                layer.sequence_usda_uint16 float64    94.504279           False        19
+                     mn.ext_usda.a70_mg.kg float64    89.557025           False     12114
+                  al.ext_usda.a69_cmolc.kg float64    88.418810           False     13376
+            awc.33.1500kPa_usda.c80_w.frac float64    88.076019           False      6379
+                  wr.33kPa_usda.a415_w.pct float64    85.655100           False     18890
+                       scan_visnir.350_ref float64    82.396002           False     12033
+         scan.visnir.method.optics_any_txt  object    82.396002            True         2
+                    p.ext_usda.a1070_mg.kg float64    79.587323           False     26649
+                      fe.ox_usda.a60_w.pct float64    79.167865           False     23269
+                      al.ox_usda.a59_w.pct float64    79.167127           False     19977
+                acidity_usda.a795_cmolc.kg float64    77.839456           False     28474
+                    al.dith_usda.a65_w.pct float64    77.047718           False     20301
+                    fe.dith_usda.a66_w.pct float64    77.045506           False     27816
+                    layer.texture_usda_txt  object    74.967380            True      1024
+                       pedon.taxa_usda_txt  object    70.457276            True      3667
+                wr.1500kPa_usda.a417_w.pct float64    69.521050           False     37440
+                          bd_usda.a4_g.cm3 float64    62.208167           False     38520
+                         ec_usda.a364_ds.m float64    58.848811           False     14387
+                     p.ext_usda.a274_mg.kg float64    58.526660           False     16789
+                 na.ext_usda.a726_cmolc.kg float64    57.923642           False     20639
+                 ca.ext_usda.a722_cmolc.kg float64    57.916270           False     51351
+                 mg.ext_usda.a724_cmolc.kg float64    57.910373           False     49889
+    scan.visnir.method.preparation_any_txt  object    52.345357            True         2
+scan.visnir.date.begin_iso.8601_yyyy.mm.dd  object    52.345357            True       185
+  scan.visnir.date.end_iso.8601_yyyy.mm.dd  object    52.345357            True       185
+        scan.visnir.contact.email_ietf_txt  object    52.345357            True         3
+         scan.visnir.contact.name_utf8_txt  object    52.345357            True         3
+       scan.visnir.license.title_ascii_txt  object    52.345357            True         2
+       scan.visnir.license.address_idn_url  object    52.345357            True         4
+                   scan.visnir.doi_idf_url  object    52.345357            True         4
+           scan.visnir.model.name_utf8_txt  object    52.345357            True         3
+            scan.visnir.model.code_any_txt  object    52.345357            True         3
+              horizon.designation_usda_txt  object    49.140073            True      2819
+   scan.mir.date.begin_iso.8601_yyyy.mm.dd  object    44.268011            True      1076
+     scan.mir.date.end_iso.8601_yyyy.mm.dd  object    44.268011            True      1075
+                      caco3_usda.a54_w.pct float64    44.258428           False     31924
+                    cec_usda.a723_cmolc.kg float64    43.939964           False     53869
+                        cf_usda.c236_w.pct float64    41.675329           False      5317
+                   sand.tot_usda.c60_w.pct float64    41.160773           False      2820
+                   silt.tot_usda.c62_w.pct float64    41.121702           False      2563
+                  clay.tot_usda.a334_w.pct float64    41.082631           False     51930
+       scan.mir.method.preparation_any_txt  object    40.083007            True         4
+            scan.mir.method.optics_any_txt  object    39.648805            True         5
+                 longitude.county_wgs84_dd float64    38.649918           False      2458
+                  latitude.county_wgs84_dd float64    38.649918           False      2456
+                    efferv_usda.a479_class  object    38.220138            True         5
+                      scan.mir.doi_idf_url  object    36.834966            True         9
+          scan.mir.license.title_ascii_txt  object    36.834966            True         2
+          scan.mir.license.address_idn_url  object    36.834966            True         3
+                          scan_mir.600_abs float64    36.834966           False     32827
+            scan.mir.contact.name_utf8_txt  object    36.834966            True         9
+               scan.mir.model.code_any_txt  object    36.834966            True         7
+              scan.mir.model.name_utf8_txt  object    36.834966            True         7
+           scan.mir.contact.email_ietf_txt  object    36.834966            True         8
+                     s.tot_usda.a624_w.pct float64    36.320410           False     19695
+             location.country_iso.3166_txt  object    35.731399            True         4
+                location.point.error_any_m float64    35.343639           False         4
+                  longitude.point_wgs84_dd float64    35.343639           False     50023
+                       id.location_olc_txt  object    35.343639            True     50001
+                   latitude.point_wgs84_dd float64    35.343639           False     49950
+                     c.tot_usda.a622_w.pct float64    33.293525           False     81550
+                  ph.cacl2_usda.a481_index float64    30.708952           False      1126
+                 surveyor.address_utf8_txt  object    30.050645            True         6
+                  k.ext_usda.a725_cmolc.kg float64    27.865626           False     46974
+                    ph.h2o_usda.a268_index float64    26.153143           False      1757
+                     n.tot_usda.a623_w.pct float64     3.246567           False     43947
+                 id.dataset.site_ascii_txt  object     2.678196            True     49203
+                 layer.lower.depth_usda_cm float64     2.582362           False       433
+                        oc_usda.c729_w.pct float64     2.330245           False     17795
+                 layer.upper.depth_usda_cm float64     0.607441           False       398
+observation.date.begin_iso.8601_yyyy.mm.dd  object     0.027276            True       150
+  observation.date.end_iso.8601_yyyy.mm.dd  object     0.027276            True       155
+                      id.project_ascii_txt  object     0.000000            True      1582
+                dataset.contact_ietf_email  object     0.000000            True         8
+                    dataset.title_utf8_txt  object     0.000000            True         9
+                    dataset.owner_utf8_txt  object     0.000000            True         9
+                   dataset.address_idn_url  object     0.000000            True         6
+                       dataset.doi_idf_url  object     0.000000            True        11
+           dataset.license.title_ascii_txt  object     0.000000            True         4
+            observation.ogc.schema_idn_url  object     0.000000            True         1
+      observation.ogc.schema.title_ogc_txt  object     0.000000            True         1
+               surveyor.contact_ietf_email  object     0.000000            True         8
+             dataset.contact.name_utf8_txt  object     0.000000            True         8
+           dataset.license.address_idn_url  object     0.000000            True         6
+                          id.layer_local_c  object     0.000000            True    135569
+                         id.layer_uuid_txt  object     0.000000            True    135651
+                    dataset.code_ascii_txt  object     0.000000            True        10
+                   surveyor.title_utf8_txt  object     0.000000            True        24
+                           id.scan_local_c  object     0.000000            True    135651
+
+=== Columns to be dropped (metadata / constant / too-missing / ID-like) ===
+ - al.ext_aquaregia_g.kg
+ - ca.ext_aquaregia_mg.kg
+ - dataset.address_idn_url
+ - dataset.code_ascii_txt
+ - dataset.contact.name_utf8_txt
+ - dataset.contact_ietf_email
+ - dataset.doi_idf_url
+ - dataset.license.address_idn_url
+ - dataset.license.title_ascii_txt
+ - dataset.owner_utf8_txt
+ - dataset.title_utf8_txt
+ - fe.ext_aquaregia_g.kg
+ - horizon.designation_usda_txt
+ - id.dataset.site_ascii_txt
+ - id.layer_local_c
+ - id.layer_uuid_txt
+ - id.location_olc_txt
+ - id.project_ascii_txt
+ - id.scan_local_c
+ - k.ext_aquaregia_mg.kg
+ - layer.texture_usda_txt
+ - mg.ext_aquaregia_mg.kg
+ - mn.ext_aquaregia_mg.kg
+ - na.ext_aquaregia_mg.kg
+ - observation.ogc.schema.title_ogc_txt
+ - observation.ogc.schema_idn_url
+ - p.ext_aquaregia_mg.kg
+ - pedon.taxa_usda_txt
+ - scan.mir.contact.email_ietf_txt
+ - scan.mir.contact.name_utf8_txt
+ - scan.mir.doi_idf_url
+ - scan.mir.license.address_idn_url
+ - scan.mir.license.title_ascii_txt
+ - scan.mir.method.optics_any_txt
+ - scan.mir.method.preparation_any_txt
+ - scan.mir.model.code_any_txt
+ - scan.mir.model.name_utf8_txt
+ - scan.visnir.contact.email_ietf_txt
+ - scan.visnir.contact.name_utf8_txt
+ - scan.visnir.doi_idf_url
+ - scan.visnir.license.address_idn_url
+ - scan.visnir.license.title_ascii_txt
+ - scan.visnir.method.optics_any_txt
+ - scan.visnir.method.preparation_any_txt
+ - scan.visnir.model.code_any_txt
+ - scan.visnir.model.name_utf8_txt
+ - surveyor.address_utf8_txt
+ - surveyor.contact_ietf_email
+ - surveyor.title_utf8_txt
+
+Cleaned dataset shape: (135651, 2837) (rows, columns)
+Saving cleaned CSV to: ossl_cleaned.csv
