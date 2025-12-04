@@ -1,4 +1,4 @@
-![ARD Logo](frontend/public/ard-logo.png)
+<img src="frontend/public/ard-logo.png" alt="ARD Logo" width="220" />
 
 # ARD Soil Intelligence Dashboard
 
