@@ -1,1 +1,49 @@
-# ard
+![ARD Logo](frontend/public/ard-logo.png)
+
+# ARD Soil Intelligence Dashboard
+
+ARD (Arabic for “earth/land”) is a soil-intelligence platform designed for growers, construction crews, and dispatch teams who need the same situational awareness of micro-regions across the United States. The project visualizes county-level telemetry—moisture, organic content, compaction, coverage, uptime, and energy stats—and pairs it with workflows for field operations:
+
+- **Growers** can inspect counties, watch soil-health indicators, and decide when to irrigate, plant, or rotate crops.
+- **Construction teams** can see which zones are safe for heavy equipment, where the ground needs remediation, and how many active sites exist per corridor.
+- **Dispatch/command** can zoom into any region, read the KPIs, narrative summary, and signal shortlist, then reassign crews or assets based on real conditions.
+
+The interactive map, KPI cards, “signals to watch,” and narrative insight offer a single-pane view so teams can coordinate across agriculture and infrastructure projects without juggling multiple dashboards.
+
+## Frontend preview
+
+- **Base URL (development):** `npm run dev` inside `frontend/`
+- **Home page:** [http://localhost:3000/](http://localhost:3000/)  
+  Interactive US map with county-level hover/click, zoom/pan, KPI cards, signal list, and narrative insight.
+- **About page:** [http://localhost:3000/about](http://localhost:3000/about)  
+  Explains the mission, highlights key telemetry/operations workflows, and links back to the dashboard.
+
+## Tech stack
+
+- **Next.js 16** with the App Router (`frontend/app`)
+- **React 19** for UI, client components where needed for interactivity
+- **Tailwind CSS (v4)** via the new `@import "tailwindcss"` approach in `globals.css`
+- **D3 (geo, zoom, selection)** plus `topojson-client` and `us-atlas` for rendering the county-level SVG map
+
+## Running locally
+
+```bash
+cd frontend
+npm install     # installs D3, topojson, us-atlas, etc.
+npm run dev     # http://localhost:3000
+npm run lint    # TypeScript/ESLint checks
+```
+
+## Structure
+
+- `frontend/app/page.tsx` – home dashboard with the zoomable SVG map, metrics panels, signal list, and narrative.
+- `frontend/app/about/page.tsx` – about page content (header reused via `components/AppHeader.tsx`).
+- `frontend/app/layout.tsx` – wraps every page with fonts and a shared footer.
+- `frontend/components/AppHeader.tsx` – logo + nav + optional action button.
+- `frontend/app/globals.css` – Tailwind + light soil-themed palette.
+
+## Customizing
+
+- **Metrics:** `PRESET_METRICS` in `app/page.tsx` seeds data for featured counties. Replace with API calls or realtime feeds for production.
+- **Signals list:** `SIGNAL_REGIONS` controls the right-hand “Signals to watch” shortlist.
+- **About content:** edit `HIGHLIGHTS` and paragraphs in `app/about/page.tsx`.
