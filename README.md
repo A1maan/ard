@@ -17,6 +17,8 @@ The interactive map, KPI cards, “signals to watch,” and narrative insight of
   Interactive US map with county-level hover/click, zoom/pan, KPI cards, signal list, and narrative insight.
 - **About page:** [http://localhost:3000/about](http://localhost:3000/about)  
   Explains the mission, highlights key telemetry/operations workflows, and links back to the dashboard.
+- **Soil Prediction Map:** [http://localhost:3000/soil_points](http://localhost:3000/soil_points)
+  Visualizes **ML model predictions** (e.g., soil organic carbon, pH) as GeoJSON points fetched from the FastAPI backend. Click a point to view the full scrollable details panel.
 
 ## Tech stack
 
@@ -33,6 +35,27 @@ npm install     # installs D3, topojson, us-atlas, etc.
 npm run dev     # http://localhost:3000
 npm run lint    # TypeScript/ESLint checks
 ```
+### Step 2: Run the Backend (Data API)
+
+The backend loads the heavy ML model and feature data, so it must be started separately.
+
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd [Your Project Root, e.g., ard/Model_and_Results]
+    ```
+    *Ensure your Python virtual environment is active: (`.venv`)*
+
+2.  **Start the Uvicorn server:**
+    ```bash
+    python -m uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload
+    ```
+    *The API is running on `http://0.0.0.0:8000`*
+
+3.  **API Endpoint:**
+    * The frontend consumes data from `http://0.0.0.0:8000/api/samples`.
+
+*Note: If you modify the prediction logic or the model in* `api_server.py`*, you must manually stop and restart the Uvicorn process.*
+
 
 ## Structure
 
