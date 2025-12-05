@@ -5,9 +5,6 @@ import warnings
 from pprint import pprint
 from typing import Dict, List, Any, Optional
 
-test_csv_path = "ossl_test_union.csv"
-pipeline_path = "ossl_per_target_pipeline.pkl"
-
 # Short human-readable descriptions for the target columns
 COLUMN_DESCRIPTIONS = {
     "oc_usda.c729_w.pct": "Soil organic carbon (%)",

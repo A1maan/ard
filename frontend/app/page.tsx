@@ -6,12 +6,21 @@ import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
-import countiesTopology from "us-atlas/counties-10m.json" assert { type: "json" };
+import countiesTopology from "us-atlas/counties-10m.json" assert { type: "json" }; // Still importing the county file, but using the states object inside it
 import { AppHeader } from "@/components/AppHeader";
 
+// --- NEW TYPE FOR GEOGRAPHICAL POINTS ---
+type GeoPoint = {
+  id: string;          // A unique identifier for the point
+  lat: number;         // Latitude
+  lon: number;         // Longitude
+  value: number;       // The metric/value you want to display
+};
+// ----------------------------------------
+
 type RegionProperties = {
-  id: string;
-  name: string;
+  id: string; // Now a 2-digit State FIPS code
+  name: string; // Now the State name
   stateAbbr: string;
   stateName: string;
   region: string;
@@ -19,21 +28,16 @@ type RegionProperties = {
 
 type RegionFeature = Feature<Geometry, RegionProperties>;
 
-type StateMetrics = {
-  activeSensors: number;
-  coverage: number;
-  avgLatency: number;
-  energyUse: number;
-  soilHealth: number;
-  yoyChange: number;
-};
-
+// ❌ REMOVED: StateMetrics type is no longer necessary for the state map
+// ❌ REMOVED: CountiesTopology type is simplified since we only use the states object
 type CountiesTopology = {
   type: "Topology";
   objects: {
-    counties: object;
+    states: object; // Using the states object from the topology
+    counties: object; // Still exists in the file, but we only reference 'states'
   };
 };
+
 
 const STATE_META: Record<string, { abbr: string; name: string; region: string }> = {
   "01": { abbr: "AL", name: "Alabama", region: "Southeast" },
@@ -90,75 +94,57 @@ const STATE_META: Record<string, { abbr: string; name: string; region: string }>
   "72": { abbr: "PR", name: "Puerto Rico", region: "Territories" },
 };
 
-const DEFAULT_REGION_ID = "06019"; // Fresno County, CA
-
-const SUMMARY_TILES = [
-  {
-    label: "Balanced soil clusters",
-    value: "164",
-    detail: "counties above 85% coverage",
-  },
-  {
-    label: "Moisture-stable acres",
-    value: "6.4M",
-    detail: "+12% week over week",
-  },
-  {
-    label: "Low-risk work sites",
-    value: "3,482",
-    detail: "ready for heavy equipment",
-  },
+// --- MOCK DATA FOR THE GEOGRAPHICAL POINTS ---
+const LIVE_POINTS: GeoPoint[] = [
+  { id: "S1", lat: 36.7378, lon: -119.7871, value: 75 }, // Near Fresno, CA
+  { id: "S2", lat: 34.0522, lon: -118.2437, value: 92 }, // Near Los Angeles, CA
+  { id: "S3", lat: 29.7604, lon: -95.3698, value: 88 },  // Near Houston, TX
+  { id: "S4", lat: 40.7128, lon: -74.0060, value: 65 },  // Near New York City, NY
+  { id: "S5", lat: 38.9072, lon: -77.0369, value: 81 },  // Near Washington D.C., DC
 ];
+// ---------------------------------------------
 
-const SIGNAL_REGIONS = [
-  "06019", // Fresno, CA
-  "06037", // Los Angeles, CA
-  "48201", // Harris, TX
-  "04013", // Maricopa, AZ
-  "17031", // Cook, IL
-  "12086", // Miami-Dade, FL
-  "53033", // King, WA
-] as const;
 
-const PRESET_METRICS: Record<string, StateMetrics> = {
-  "06019": { activeSensors: 512, coverage: 91, avgLatency: 164, energyUse: 1.8, soilHealth: 72, yoyChange: 9.1 },
-  "06037": { activeSensors: 784, coverage: 88, avgLatency: 178, energyUse: 2.7, soilHealth: 63, yoyChange: 6.2 },
-  "48201": { activeSensors: 615, coverage: 82, avgLatency: 187, energyUse: 2.3, soilHealth: 59, yoyChange: 4.9 },
-  "04013": { activeSensors: 402, coverage: 79, avgLatency: 193, energyUse: 1.6, soilHealth: 57, yoyChange: 3.3 },
-  "17031": { activeSensors: 521, coverage: 76, avgLatency: 201, energyUse: 1.4, soilHealth: 55, yoyChange: 2.8 },
-  "12086": { activeSensors: 366, coverage: 81, avgLatency: 184, energyUse: 1.9, soilHealth: 61, yoyChange: 5.1 },
-  "53033": { activeSensors: 448, coverage: 84, avgLatency: 176, energyUse: 1.5, soilHealth: 69, yoyChange: 4.2 },
-};
+const DEFAULT_REGION_ID = "06"; // Now the State FIPS code for California (CA)
+
+// ❌ REMOVED: SUMMARY_TILES (since the metrics are removed, these details are inaccurate)
+// ❌ REMOVED: SIGNAL_REGIONS (only county IDs are listed here)
+// ❌ REMOVED: PRESET_METRICS (county-level data)
 
 type RegionData = {
   features: RegionFeature[];
   lookup: Record<string, RegionProperties>;
 };
 
+// --- MODIFIED buildRegionData TO USE STATES GEOMETRY ---
 const buildRegionData = (): RegionData => {
   const topology = countiesTopology as CountiesTopology;
+
+  // KEY CHANGE: Use topology.objects.states instead of topology.objects.counties
   const collection = feature(
     topology,
-    topology.objects.counties,
+    topology.objects.states,
   ) as FeatureCollection<Geometry, { id: string; properties: { name?: string } }>;
 
   const lookup: Record<string, RegionProperties> = {};
 
   const features = collection.features
     .map((shape) => {
-      const countyId = String(shape.id ?? "");
-      if (!countyId) return null;
-      const stateCode = countyId.slice(0, 2);
-      const stateMeta = STATE_META[stateCode];
+      const stateId = String(shape.id ?? ""); // ID is now the 2-digit State FIPS
+      if (!stateId) return null;
+
+      const stateMeta = STATE_META[stateId];
       if (!stateMeta) return null;
+
       const props: RegionProperties = {
-        id: countyId,
-        name: shape.properties?.name ?? "Unnamed",
+        id: stateId, // Use the 2-digit state code
+        name: stateMeta.name, // Use the state name
         stateAbbr: stateMeta.abbr,
         stateName: stateMeta.name,
         region: stateMeta.region,
       };
-      lookup[countyId] = props;
+
+      lookup[stateId] = props;
       return {
         ...shape,
         properties: props,
@@ -168,21 +154,20 @@ const buildRegionData = (): RegionData => {
 
   return { features, lookup };
 };
+// --------------------------------------------------------
 
-const getFallbackMetrics = (id: string): StateMetrics => {
-  const digits = id.split("").map((char) => char.charCodeAt(0));
-  const seed = digits.reduce((total, value) => total + value, 0);
-  return {
-    activeSensors: 100 + ((seed * 5) % 450),
-    coverage: 50 + ((seed * 7) % 45),
-    avgLatency: 160 + ((seed * 3) % 60),
-    energyUse: parseFloat((0.6 + ((seed % 14) * 0.11)).toFixed(1)),
-    soilHealth: 40 + (seed % 50),
-    yoyChange: ((seed % 18) - 6) + 0.4,
-  };
-};
+// ❌ REMOVED: getFallbackMetrics
+// ❌ REMOVED: getMetrics (we are now using the LIVE_POINTS data for visualization instead)
 
-const getMetrics = (id: string): StateMetrics => PRESET_METRICS[id] ?? getFallbackMetrics(id);
+// Function to provide placeholder metrics for the UI details panel (since real metrics were removed)
+const getPlaceholderMetrics = () => ({
+  activeSensors: LIVE_POINTS.length * 10,
+  coverage: 75,
+  avgLatency: 180,
+  energyUse: 2.1,
+  soilHealth: 68,
+  yoyChange: 4.5,
+});
 
 const formatNumber = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
@@ -191,6 +176,7 @@ export default function Home() {
     () => buildRegionData(),
     [],
   );
+  // Default region is now a state ID (CA - "06")
   const [selectedRegion, setSelectedRegion] = useState(DEFAULT_REGION_ID);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
 
@@ -211,9 +197,12 @@ export default function Home() {
 
   const path = useMemo(() => (projection ? geoPath(projection) : null), [projection]);
 
+  // We are using state IDs now, but the logic remains the same
   const activeRegionId = hoveredRegion ?? selectedRegion;
   const activeMeta = regionLookup[activeRegionId];
-  const activeMetrics = getMetrics(activeRegionId);
+  
+  // Use placeholder metrics now
+  const activeMetrics = getPlaceholderMetrics(); 
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const groupRef = useRef<SVGGElement | null>(null);
@@ -257,7 +246,7 @@ export default function Home() {
             className="rounded-full border border-[#9ab07b] px-5 py-2 text-sm font-medium text-[#2f472f] transition hover:border-[#5d7a46] hover:text-[#1f341f]"
             onClick={handleReset}
           >
-            Reset to Central Valley focus
+            Reset to California focus
           </button>
         }
       />
@@ -266,12 +255,12 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 text-[#5f714d]">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#8ca36d]">Terrain intelligence</p>
-            <p className="text-2xl font-semibold text-[#1f341f]">Interactive US micro-region map</p>
+            <p className="text-2xl font-semibold text-[#1f341f]">Interactive US state map</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#87b053]" />
-              Higher coverage
+              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#e63946]" />
+              Live Sensor Site
             </div>
             <span className="rounded-full border border-[#d1c5a6] px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-[#7c7355]">
               zoom + drag
@@ -286,22 +275,24 @@ export default function Home() {
                 viewBox="0 0 760 480"
                 className="h-full w-full"
                 role="img"
-                aria-label="Interactive US county map"
+                aria-label="Interactive US state map"
                 onMouseLeave={() => setHoveredRegion(null)}
               >
                 <g ref={groupRef}>
                   {regionFeatures.map((regionFeature) => {
                     const regionId = regionFeature.properties?.id;
                     if (!regionId) return null;
-                    const metrics = getMetrics(regionId);
+                    
+                    // ❌ METRICS ARE NOW PLACEHOLDER - Map color is static for states
                     const isSelected = selectedRegion === regionId;
                     const isHovered = hoveredRegion === regionId;
-                    const coverageRatio = metrics.coverage / 100;
+                    
                     const fill = isSelected
                       ? "#2f855a"
                       : isHovered
                         ? "#48a868"
-                        : `rgba(${120 + coverageRatio * 40}, ${150 + coverageRatio * 50}, ${110 + coverageRatio * 20}, ${0.35 + coverageRatio * 0.35})`;
+                        : `#e0e0e0`; // Static fill for states
+                        
                     return (
                       <path
                         key={regionId}
@@ -312,16 +303,43 @@ export default function Home() {
                         className="cursor-pointer transition duration-150 ease-out"
                         style={{
                           fill,
-                          stroke: isSelected ? "#1f4731" : "rgba(82, 102, 77, 0.6)",
-                          strokeWidth: isSelected ? 1.4 : 0.5,
+                          // Use a border for all states
+                          stroke: isSelected ? "#1f4731" : "rgba(82, 102, 77, 0.8)",
+                          strokeWidth: isSelected ? 1.4 : 0.8,
                           filter: isSelected || isHovered ? "drop-shadow(0 0 10px rgba(47,133,90,0.5))" : "none",
                           transform: isSelected || isHovered ? "translateY(-1px)" : "none",
                         }}
                       >
-                        <title>{`${regionFeature.properties?.name ?? "Unknown"}, ${regionFeature.properties?.stateAbbr ?? ""} · Coverage ${metrics.coverage}%`}</title>
+                        {/* Title text updated to use placeholder data */}
+                        <title>{`${regionFeature.properties?.name ?? "Unknown"} · State View`}</title> 
                       </path>
                     );
                   })}
+                  
+                  {/* --- NEW SECTION: DRAW LAT/LON POINTS --- */}
+                  {projection && LIVE_POINTS.map((point) => {
+                    const coords = projection([point.lon, point.lat]);
+                    
+                    // Check if the coordinates are valid (not outside the map bounds)
+                    if (!coords) return null;
+
+                    return (
+                      <circle
+                        key={point.id}
+                        cx={coords[0]}
+                        cy={coords[1]}
+                        r={3} // Radius of the sensor point
+                        fill="#e63946" // Red color for visibility
+                        stroke="#a83232"
+                        strokeWidth={1.5}
+                        className="transition duration-150 ease-out"
+                        style={{ filter: "drop-shadow(0 0 3px rgba(230, 57, 70, 0.9))" }}
+                      >
+                        <title>{`Sensor ${point.id}: Value ${point.value} at ${point.lat.toFixed(2)}, ${point.lon.toFixed(2)}`}</title>
+                      </circle>
+                    );
+                  })}
+                  {/* -------------------------------------- */}
                 </g>
               </svg>
             ) : (
@@ -343,8 +361,13 @@ export default function Home() {
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-3xl border border-[#d8cfb4] bg-white/85 px-6 py-6 shadow-[0_30px_65px_rgba(76,64,40,0.15)] backdrop-blur lg:col-span-2">
             <p className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">National highlights</p>
+            {/* ❌ Removed the original SUMMARY_TILES data source, but keeping the component structure */}
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              {SUMMARY_TILES.map((tile) => (
+              {[
+                { label: "Total Sensor Sites", value: formatNumber(LIVE_POINTS.length), detail: "across all points" },
+                { label: "Map Resolution", value: "State Only", detail: "Optimized for performance" },
+                { label: "Avg. Site Value", value: `${(LIVE_POINTS.reduce((sum, p) => sum + p.value, 0) / LIVE_POINTS.length).toFixed(1)}`, detail: "from live points" },
+              ].map((tile) => (
                 <div
                   key={tile.label}
                   className="rounded-2xl border border-[#d4c9a8] bg-gradient-to-br from-[#fffdf7] to-[#f4eddc] px-4 py-5"
@@ -357,8 +380,9 @@ export default function Home() {
             </div>
           </div>
 
+          {/* This panel now uses the active state's metadata and placeholder metrics */}
           <div className="rounded-3xl border border-[#d1c7a6] bg-white/90 p-6 shadow-xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#7c6b43]">Selected micro-region</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#7c6b43]">Selected state</p>
             <div className="mt-2 flex items-baseline gap-2">
               <h2 className="text-2xl font-semibold text-[#1f341f]">
                 {regionLookup[selectedRegion]?.name ?? "United States"}
@@ -371,23 +395,24 @@ export default function Home() {
               {regionLookup[selectedRegion]?.stateName ?? "National view"} • {regionLookup[selectedRegion]?.region ?? "Multi-region"}
             </p>
 
+            {/* Metrics now use placeholder data (getPlaceholderMetrics) */}
             <dl className="mt-6 grid gap-4">
               <div className="rounded-2xl border border-[#d4c9a8] bg-white px-4 py-3">
-                <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Active sites</dt>
+                <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Active sites (Placeholder)</dt>
                 <dd className="mt-1 text-3xl font-semibold text-[#1f341f]">
                   {formatNumber(activeMetrics.activeSensors)}
                 </dd>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-[#d4c9a8] bg-white px-4 py-3">
-                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Coverage</dt>
+                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Coverage (Placeholder)</dt>
                   <dd className="mt-1 text-2xl font-semibold text-[#1f341f]">{activeMetrics.coverage}%</dd>
                   <div className="mt-2 h-1.5 rounded-full bg-[#efe9d4]">
                     <div className="h-full rounded-full bg-[#8cb255]" style={{ width: `${activeMetrics.coverage}%` }} />
                   </div>
                 </div>
                 <div className="rounded-2xl border border-[#d4c9a8] bg-white px-4 py-3">
-                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Avg latency</dt>
+                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Avg latency (Placeholder)</dt>
                   <dd className="mt-1 text-2xl font-semibold text-[#1f341f]">
                     {activeMetrics.avgLatency}
                     <span className="text-base font-normal text-[#5c6c50]"> ms</span>
@@ -396,19 +421,19 @@ export default function Home() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-[#d4c9a8] bg-white px-4 py-3">
-                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Clean energy</dt>
+                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Clean energy (Placeholder)</dt>
                   <dd className="mt-1 text-2xl font-semibold text-[#1f341f]">
                     {activeMetrics.energyUse.toFixed(1)}
                     <span className="text-base font-normal text-[#5c6c50]"> GWh</span>
                   </dd>
                 </div>
                 <div className="rounded-2xl border border-[#d4c9a8] bg-white px-4 py-3">
-                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Soil health</dt>
+                  <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Soil health (Placeholder)</dt>
                   <dd className="mt-1 text-2xl font-semibold text-[#1f341f]">{activeMetrics.soilHealth}</dd>
                 </div>
               </div>
               <div className="rounded-2xl border border-[#d4c9a8] bg-white px-4 py-3">
-                <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">YoY change</dt>
+                <dt className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">YoY change (Placeholder)</dt>
                 <dd
                   className={`mt-1 text-2xl font-semibold ${
                     activeMetrics.yoyChange >= 0 ? "text-[#3b7f2d]" : "text-rose-500"
@@ -422,55 +447,19 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ❌ REMOVED: The entire "Signals to watch" aside block, as it relied on county-level metrics (SIGNAL_REGIONS) */}
+        
         <aside
-          id="signals"
-          className="mt-8 grid gap-4 rounded-3xl border border-[#d8cfb4] bg-white/90 px-6 py-5 shadow-2xl lg:grid-cols-2"
+          id="narrative"
+          className="mt-8 grid gap-4 rounded-3xl border border-[#d8cfb4] bg-white/90 px-6 py-5 shadow-2xl"
         >
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[#7c6b43]">Signals to watch</p>
-            <ul className="mt-3 space-y-3">
-              {SIGNAL_REGIONS.map((regionId) => {
-                const meta = regionLookup[regionId];
-                if (!meta) return null;
-                const metrics = getMetrics(regionId);
-                return (
-                  <li
-                    key={regionId}
-                    className={`rounded-2xl border border-[#ded2b0] px-4 py-3 transition hover:border-[#a6c05c] ${selectedRegion === regionId ? "bg-[#f6f2e4]" : "bg-white"}`}
-                    onMouseEnter={() => setHoveredRegion(regionId)}
-                    onMouseLeave={() => setHoveredRegion(null)}
-                    onClick={() => setSelectedRegion(regionId)}
-                  >
-                    <div className="flex items-center justify-between text-sm">
-                      <div>
-                        <p className="font-semibold text-[#1f341f]">
-                          {meta.name}, {meta.stateAbbr}
-                        </p>
-                        <p className="text-xs text-[#6b7654]">{meta.region}</p>
-                      </div>
-                      <p className={`text-sm font-medium ${metrics.yoyChange >= 0 ? "text-[#3b7f2d]" : "text-rose-500"}`}>
-                        {metrics.yoyChange >= 0 ? "+" : ""}
-                        {metrics.yoyChange.toFixed(1)}%
-                      </p>
-                    </div>
-                    <div className="mt-3 h-1.5 rounded-full bg-[#efe9d4]">
-                      <div className="h-full rounded-full bg-[#8cb255]" style={{ width: `${metrics.coverage}%` }} />
-                    </div>
-                    <p className="mt-1 text-xs text-[#5c6c50]">
-                      {formatNumber(metrics.activeSensors)} active installations · {metrics.coverage}% coverage
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
           <div className="rounded-2xl border border-[#d4c9a8] bg-gradient-to-br from-white to-[#f4eddc] px-4 py-5">
             <p className="text-xs uppercase tracking-[0.3em] text-[#7c6b43]">Narrative insight</p>
             <p className="mt-3 text-lg font-semibold text-[#1f341f]">
-              {activeMeta?.name ?? "Select a region"}, {activeMeta?.stateAbbr ?? "US"} is steering {activeMetrics.yoyChange >= 0 ? "positive" : "negative"} ground conditions with {activeMetrics.coverage}% coverage, soil health index {activeMetrics.soilHealth}, and {formatNumber(activeMetrics.activeSensors)} prepared work zones.
+              {activeMeta?.name ?? "Select a state"}, {activeMeta?.stateAbbr ?? "US"} is now viewed at the state level. Live sensor data is plotted as red circles on the map.
             </p>
             <p className="mt-2 text-sm text-[#5c6c50]">
-              Use zoom to inspect corridors feeding irrigation, harvesters, or heavy rigs. Insights refresh instantly so planners can compare loamy basins against rocky uplands before dispatching crews.
+              The metric data shown below is placeholder data. To get real-time metrics, you will need to wire up the API call in the `useEffect` hook and update the `activeMetrics` state.
             </p>
           </div>
         </aside>
