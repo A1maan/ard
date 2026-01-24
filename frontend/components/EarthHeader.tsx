@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   Undo2,
@@ -13,21 +14,17 @@ import {
   Wrench,
   Settings,
   ChevronDown,
+  Leaf,
 } from "lucide-react";
-import { FarmsDropdown, type Farm } from "./FarmsDropdown";
 
 type EarthHeaderProps = {
   projectName?: string;
   onSearch?: (query: string) => void;
-  selectedFarm: Farm | null;
-  onSelectFarm: (farm: Farm) => void;
 };
 
 export function EarthHeader({
-  projectName = "My Farm",
+  projectName = "My Farms",
   onSearch,
-  selectedFarm,
-  onSelectFarm,
 }: EarthHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -71,12 +68,11 @@ export function EarthHeader({
           <button className="menu-item">Help</button>
         </nav>
 
-        {/* Farms Dropdown */}
-        <FarmsDropdown
-          selectedFarm={selectedFarm}
-          onSelectFarm={onSelectFarm}
-          projectName={projectName}
-        />
+        {/* My Farms Link */}
+        <Link href="/farms" className="farms-link">
+          <Leaf size={14} className="leaf-icon" />
+          <span>{projectName}</span>
+        </Link>
 
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="search-container">
@@ -184,10 +180,28 @@ export function EarthHeader({
           background: rgba(255, 255, 255, 0.1);
         }
 
-        .project-name {
-          color: #9aa0a6;
-          font-size: 12px;
-          padding: 0 16px;
+        :global(.farms-link) {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 8px 14px;
+          color: #e8eaed;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.15s;
+          text-decoration: none;
+        }
+
+        :global(.farms-link:hover) {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(74, 222, 128, 0.4);
+        }
+
+        :global(.farms-link .leaf-icon) {
+          color: #4ade80;
         }
 
         .search-container {

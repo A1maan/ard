@@ -210,7 +210,7 @@ export function SoilDashboard({ farm, isOpen, onClose }: SoilDashboardProps) {
           </div>
           <div className="detail-row">
             <span className="detail-label">Area</span>
-            <span className="detail-value">{farm.area}</span>
+            <span className="detail-value">{farm.size}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Last Updated</span>

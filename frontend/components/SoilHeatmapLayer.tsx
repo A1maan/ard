@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Farm } from "./FarmsDropdown";
 
 type SoilHeatmapLayerProps = {
-  map: L.Map | null;
+  map: unknown;
   farm: Farm | null;
   visible: boolean;
 };
@@ -34,35 +34,37 @@ const generateHeatmapPoints = (
 
 export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) {
   const markersRef = useRef<L.LayerGroup | null>(null);
-  const [L, setL] = useState<typeof import("leaflet") | null>(null);
+  const [leaflet, setLeaflet] = useState<typeof import("leaflet") | null>(null);
 
   // Dynamically import Leaflet to avoid SSR issues
   useEffect(() => {
-    import("leaflet").then((leaflet) => {
-      setL(leaflet.default);
+    import("leaflet").then((L) => {
+      setLeaflet(L.default);
     });
   }, []);
 
   useEffect(() => {
-    if (!L || !map || !farm || !visible) {
+    if (!leaflet || !map || !farm || !visible) {
       // Clean up if not visible
       if (markersRef.current && map) {
-        map.removeLayer(markersRef.current);
+        (map as L.Map).removeLayer(markersRef.current);
         markersRef.current = null;
       }
       return;
     }
 
+    const leafletMap = map as L.Map;
+
     // Clean up previous layer
     if (markersRef.current) {
-      map.removeLayer(markersRef.current);
+      leafletMap.removeLayer(markersRef.current);
     }
 
     // Create heatmap points
     const heatmapPoints = generateHeatmapPoints(farm.coordinates, 80);
     
     // Create circle markers with gradient for heatmap effect
-    const markers = L.layerGroup();
+    const markers = leaflet.layerGroup();
     
     heatmapPoints.forEach(([lat, lng, intensity]) => {
       // Determine color based on intensity and farm health
@@ -73,7 +75,7 @@ export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) 
       
       const color = `rgba(${r}, ${g}, ${b}, ${intensity * 0.6})`;
       
-      const circle = L.circleMarker([lat, lng], {
+      const circle = leaflet.circleMarker([lat, lng], {
         radius: 15 + intensity * 20,
         fillColor: color,
         fillOpacity: 0.5,
@@ -99,7 +101,7 @@ export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) 
       const clampedValue = Math.max(0, Math.min(100, value));
       const color = clampedValue > 75 ? "#4ade80" : clampedValue > 50 ? "#facc15" : "#f87171";
       
-      const marker = L.circleMarker(
+      const marker = leaflet.circleMarker(
         [farm.coordinates[0] + offset[0], farm.coordinates[1] + offset[1]],
         {
           radius: 8,
@@ -128,7 +130,7 @@ export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) 
       [farm.coordinates[0] - 0.05, farm.coordinates[1] - 0.05],
     ];
     
-    const boundary = L.polygon(boundaryPoints, {
+    const boundary = leaflet.polygon(boundaryPoints, {
       color: "#4ade80",
       weight: 2,
       fillColor: "#4ade80",
@@ -139,8 +141,8 @@ export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) 
     markers.addLayer(boundary);
 
     // Add farm label
-    const farmLabel = L.marker(farm.coordinates, {
-      icon: L.divIcon({
+    const farmLabel = leaflet.marker(farm.coordinates, {
+      icon: leaflet.divIcon({
         className: "farm-label",
         html: `<div style="
           background: rgba(30, 30, 46, 0.9);
@@ -160,16 +162,16 @@ export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) 
     
     markers.addLayer(farmLabel);
 
-    markers.addTo(map);
+    markers.addTo(leafletMap);
     markersRef.current = markers;
 
     return () => {
       if (markersRef.current) {
-        map.removeLayer(markersRef.current);
+        leafletMap.removeLayer(markersRef.current);
         markersRef.current = null;
       }
     };
-  }, [L, map, farm, visible]);
+  }, [leaflet, map, farm, visible]);
 
   return null;
 }

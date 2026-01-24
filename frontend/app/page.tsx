@@ -6,40 +6,17 @@ import { SatelliteMap, type SatelliteMapRef } from "@/components/SatelliteMap";
 import { MapControls } from "@/components/MapControls";
 import { StatusBar } from "@/components/StatusBar";
 import { MiniMap } from "@/components/MiniMap";
-import { SoilDashboard } from "@/components/SoilDashboard";
-import { SoilHeatmapLayer } from "@/components/SoilHeatmapLayer";
-import { ChatButton } from "@/components/ChatButton";
-import type { Farm } from "@/components/FarmsDropdown";
 
 export default function Home() {
-  const [mapCenter, setMapCenter] = useState<[number, number]>([28.24, 64.46]);
-  const [mapZoom, setMapZoom] = useState(4);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([24.7136, 46.6753]); // Saudi Arabia
+  const [mapZoom, setMapZoom] = useState(5);
   const [is3D, setIs3D] = useState(false);
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [showDashboard, setShowDashboard] = useState(false);
-  const [mapInstance, setMapInstance] = useState<unknown>(null);
   
   const mapRef = useRef<SatelliteMapRef>(null);
 
   const handleSearch = useCallback((query: string) => {
     console.log("Searching for:", query);
     // TODO: Implement geocoding search
-  }, []);
-
-  const handleSelectFarm = useCallback((farm: Farm) => {
-    setSelectedFarm(farm);
-    setShowDashboard(true);
-    
-    // Fly to the farm location
-    mapRef.current?.flyTo(farm.coordinates, 12);
-  }, []);
-
-  const handleCloseDashboard = useCallback(() => {
-    setShowDashboard(false);
-  }, []);
-
-  const handleMapReady = useCallback((map: unknown) => {
-    setMapInstance(map as L.Map);
   }, []);
 
   const handleZoomIn = useCallback(() => {
@@ -51,10 +28,8 @@ export default function Home() {
   }, []);
 
   const handleReset = useCallback(() => {
-    setMapCenter([28.24, 64.46]);
-    setMapZoom(4);
-    setSelectedFarm(null);
-    setShowDashboard(false);
+    setMapCenter([24.7136, 46.6753]);
+    setMapZoom(5);
   }, []);
 
   const handle3DToggle = useCallback(() => {
@@ -93,10 +68,8 @@ export default function Home() {
   return (
     <div className="earth-app">
       <EarthHeader
-        projectName="My Farm"
+        projectName="My Farms"
         onSearch={handleSearch}
-        selectedFarm={selectedFarm}
-        onSelectFarm={handleSelectFarm}
       />
       
       <div className="map-wrapper">
@@ -106,24 +79,7 @@ export default function Home() {
           zoom={mapZoom}
           onCenterChange={setMapCenter}
           onZoomChange={setMapZoom}
-          onMapReady={handleMapReady}
         />
-        
-        {/* Soil Heatmap Layer */}
-        <SoilHeatmapLayer
-          map={mapInstance}
-          farm={selectedFarm}
-          visible={showDashboard && !!selectedFarm}
-        />
-        
-        {/* Soil Dashboard Sidebar */}
-        {selectedFarm && (
-          <SoilDashboard
-            farm={selectedFarm}
-            isOpen={showDashboard}
-            onClose={handleCloseDashboard}
-          />
-        )}
         
         <MiniMap center={mapCenter} />
         
@@ -134,9 +90,6 @@ export default function Home() {
           on3DToggle={handle3DToggle}
           is3D={is3D}
         />
-        
-        {/* Chat Button */}
-        <ChatButton farm={selectedFarm} />
         
         <StatusBar
           zoom={zoomPercentage}

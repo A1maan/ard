@@ -83,7 +83,7 @@ How can I help you today?`,
     }
 
     if (lowerMessage.includes("water") || lowerMessage.includes("irrigation")) {
-      return `For **${farm.name}** with ${farm.area} of ${farm.soilType} soil:
+      return `For **${farm.name}** with ${farm.size} of ${farm.soilType} soil:
 
 • **Recommended irrigation**: Drip irrigation system
 • **Frequency**: Every 3-4 days during growing season
@@ -119,7 +119,7 @@ Share more details and I'll provide specific solutions.`;
 
 To give you the most accurate advice, I'm analyzing:
 • Soil type: ${farm.soilType}
-• Farm area: ${farm.area}
+• Farm area: ${farm.size}
 • Current health score: ${farm.healthScore}%
 
 Could you provide more specific details about what aspect of your farm you'd like to focus on?`;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { ChevronDown, MapPin, Leaf } from "lucide-react";
 
 export type Farm = {
@@ -8,8 +9,9 @@ export type Farm = {
   name: string;
   location: string;
   coordinates: [number, number]; // [lat, lng]
-  area: string;
+  size: string;
   soilType: string;
+  health: "good" | "warning" | "critical";
   healthScore: number;
 };
 
@@ -20,8 +22,9 @@ export const FARMS_DATA: Farm[] = [
     name: "Al Kharj Farm",
     location: "Al Kharj, Saudi Arabia",
     coordinates: [24.1500, 47.3000],
-    area: "250 hectares",
+    size: "250 hectares",
     soilType: "Sandy Loam",
+    health: "warning",
     healthScore: 78,
   },
   {
@@ -29,8 +32,9 @@ export const FARMS_DATA: Farm[] = [
     name: "Tabuk Agricultural Project",
     location: "Tabuk, Saudi Arabia",
     coordinates: [28.3838, 36.5550],
-    area: "180 hectares",
+    size: "180 hectares",
     soilType: "Clay Loam",
+    health: "good",
     healthScore: 85,
   },
   {
@@ -38,8 +42,9 @@ export const FARMS_DATA: Farm[] = [
     name: "Qassim Date Plantation",
     location: "Buraydah, Saudi Arabia",
     coordinates: [26.3260, 43.9750],
-    area: "320 hectares",
+    size: "320 hectares",
     soilType: "Sandy",
+    health: "warning",
     healthScore: 72,
   },
   {
@@ -47,8 +52,9 @@ export const FARMS_DATA: Farm[] = [
     name: "Jizan Tropical Farm",
     location: "Jizan, Saudi Arabia",
     coordinates: [16.8892, 42.5511],
-    area: "150 hectares",
+    size: "150 hectares",
     soilType: "Alluvial",
+    health: "good",
     healthScore: 88,
   },
   {
@@ -56,22 +62,19 @@ export const FARMS_DATA: Farm[] = [
     name: "Hail Wheat Fields",
     location: "Hail, Saudi Arabia",
     coordinates: [27.5114, 41.7208],
-    area: "400 hectares",
+    size: "400 hectares",
     soilType: "Loamy Sand",
+    health: "critical",
     healthScore: 65,
   },
 ];
 
 type FarmsDropdownProps = {
-  selectedFarm: Farm | null;
-  onSelectFarm: (farm: Farm) => void;
   projectName?: string;
 };
 
 export function FarmsDropdown({
-  selectedFarm,
-  onSelectFarm,
-  projectName = "My Farm",
+  projectName = "My Farms",
 }: FarmsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -100,7 +103,7 @@ export function FarmsDropdown({
         onClick={() => setIsOpen(!isOpen)}
       >
         <Leaf size={14} className="farm-icon" />
-        <span>{selectedFarm?.name || projectName}</span>
+        <span>{projectName}</span>
         <ChevronDown
           size={14}
           className={`chevron ${isOpen ? "open" : ""}`}
@@ -115,13 +118,11 @@ export function FarmsDropdown({
           </div>
           <div className="dropdown-list">
             {FARMS_DATA.map((farm) => (
-              <button
+              <Link
                 key={farm.id}
-                className={`farm-item ${selectedFarm?.id === farm.id ? "selected" : ""}`}
-                onClick={() => {
-                  onSelectFarm(farm);
-                  setIsOpen(false);
-                }}
+                href={`/farm/${farm.id}`}
+                className="farm-item"
+                onClick={() => setIsOpen(false)}
               >
                 <div className="farm-info">
                   <MapPin size={14} className="pin-icon" />
@@ -137,7 +138,7 @@ export function FarmsDropdown({
                   />
                   <span className="health-score">{farm.healthScore}%</span>
                 </div>
-              </button>
+              </Link>
             ))}
           </div>
           <div className="dropdown-footer">
@@ -234,7 +235,7 @@ export function FarmsDropdown({
           overflow-y: auto;
         }
 
-        .farm-item {
+        .dropdown-list :global(.farm-item) {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -245,61 +246,66 @@ export function FarmsDropdown({
           cursor: pointer;
           transition: background 0.15s;
           text-align: left;
+          text-decoration: none;
+          color: inherit;
         }
 
-        .farm-item:hover {
+        .dropdown-list :global(.farm-item:hover) {
           background: rgba(255, 255, 255, 0.05);
         }
 
-        .farm-item.selected {
+        .dropdown-list :global(.farm-item.selected) {
           background: rgba(74, 222, 128, 0.1);
           border-left: 3px solid #4ade80;
         }
 
-        .farm-info {
+        .dropdown-list :global(.farm-info) {
           display: flex;
           align-items: flex-start;
           gap: 10px;
+          flex: 1;
         }
 
-        .pin-icon {
+        .dropdown-list :global(.pin-icon) {
           color: #9aa0a6;
           margin-top: 2px;
           flex-shrink: 0;
         }
 
-        .farm-details {
+        .dropdown-list :global(.farm-details) {
           display: flex;
           flex-direction: column;
           gap: 2px;
         }
 
-        .farm-name {
+        .dropdown-list :global(.farm-name) {
           color: #e8eaed;
           font-size: 14px;
           font-weight: 500;
         }
 
-        .farm-location {
+        .dropdown-list :global(.farm-location) {
           color: #9aa0a6;
           font-size: 12px;
         }
 
-        .farm-health {
+        .dropdown-list :global(.farm-health) {
           display: flex;
           align-items: center;
           gap: 6px;
+          flex-shrink: 0;
         }
 
-        .health-indicator {
+        .dropdown-list :global(.health-indicator) {
           width: 8px;
           height: 8px;
           border-radius: 50%;
         }
 
-        .health-score {
+        .dropdown-list :global(.health-score) {
           color: #9aa0a6;
           font-size: 12px;
+          min-width: 32px;
         }
 
         .dropdown-footer {

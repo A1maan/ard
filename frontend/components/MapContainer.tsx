@@ -24,19 +24,25 @@ const MapContainer = forwardRef<MapContainerRef, MapContainerProps>(
   ) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
+    const initializedRef = useRef(false);
+    const isUserInteractionRef = useRef(false);
 
     useImperativeHandle(ref, () => ({
       getMap: () => mapInstanceRef.current,
       flyTo: (center: [number, number], zoom: number) => {
-        mapInstanceRef.current?.flyTo(center, zoom, {
-          duration: 2,
-          easeLinearity: 0.25,
-        });
+        if (mapInstanceRef.current) {
+          isUserInteractionRef.current = false;
+          mapInstanceRef.current.flyTo(center, zoom, {
+            duration: 2,
+            easeLinearity: 0.25,
+          });
+        }
       },
     }));
 
     useEffect(() => {
-      if (!mapRef.current || mapInstanceRef.current) return;
+      if (!mapRef.current || initializedRef.current) return;
+      initializedRef.current = true;
 
       // Initialize the map
       const map = L.map(mapRef.current, {
@@ -62,14 +68,28 @@ const MapContainer = forwardRef<MapContainerRef, MapContainerProps>(
         }
       ).addTo(map);
 
-      // Event handlers
+      // Track user interaction
+      map.on("dragstart", () => {
+        isUserInteractionRef.current = true;
+      });
+      
+      map.on("zoomstart", () => {
+        isUserInteractionRef.current = true;
+      });
+
+      // Only notify parent of changes during user interaction
       map.on("moveend", () => {
-        const newCenter = map.getCenter();
-        onCenterChange?.([newCenter.lat, newCenter.lng]);
+        if (isUserInteractionRef.current) {
+          const newCenter = map.getCenter();
+          onCenterChange?.([newCenter.lat, newCenter.lng]);
+        }
       });
 
       map.on("zoomend", () => {
-        onZoomChange?.(map.getZoom());
+        if (isUserInteractionRef.current) {
+          onZoomChange?.(map.getZoom());
+          isUserInteractionRef.current = false;
+        }
       });
 
       mapInstanceRef.current = map;
@@ -78,22 +98,9 @@ const MapContainer = forwardRef<MapContainerRef, MapContainerProps>(
       return () => {
         map.remove();
         mapInstanceRef.current = null;
+        initializedRef.current = false;
       };
     }, []);
-
-    // Update center when prop changes
-    useEffect(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setView(center, mapInstanceRef.current.getZoom());
-      }
-    }, [center]);
-
-    // Update zoom when prop changes
-    useEffect(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setZoom(zoom);
-      }
-    }, [zoom]);
 
     return (
       <>
