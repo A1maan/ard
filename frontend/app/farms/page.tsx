@@ -1,5 +1,22 @@
 "use client";
 
+import { ChatWidget as ChatWidgetUI, type ChatWidgetProps } from "chat-widget";
+
+export function ChatWidgetDemo(props: ChatWidgetProps) {
+  return (
+    <div className="h-full w-full">
+      <ChatWidgetUI
+        apiUrl="http://localhost:2024"
+        assistantId="agent"
+        apiKey={null}
+      />
+    </div>
+  );
+}
+
+
+
+
 import Link from "next/link";
 import { ArrowLeft, MapPin, Leaf, Plus } from "lucide-react";
 import { FARMS_DATA } from "@/components/FarmsDropdown";

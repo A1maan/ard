@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../node_modules/chat-widget/dist/**/*.{js,ts,jsx,tsx}";
 
 :root {
   --background: #1a1a2e;
@@ -20,7 +21,7 @@
 
 html, body {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 body {
@@ -37,3 +38,5 @@ body {
 .leaflet-control-attribution {
   display: none !important;
 }
+
+

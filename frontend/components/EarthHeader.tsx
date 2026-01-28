@@ -15,6 +15,7 @@ import {
   Settings,
   ChevronDown,
   Leaf,
+  MessageSquare,
 } from "lucide-react";
 
 type EarthHeaderProps = {
@@ -72,6 +73,12 @@ export function EarthHeader({
         <Link href="/farms" className="farms-link">
           <Leaf size={14} className="leaf-icon" />
           <span>{projectName}</span>
+        </Link>
+
+        {/* Chat Link */}
+        <Link href="/chat" className="chat-link">
+          <MessageSquare size={14} className="chat-icon" />
+          <span>Chat</span>
         </Link>
 
         {/* Search Bar */}
@@ -202,6 +209,30 @@ export function EarthHeader({
 
         :global(.farms-link .leaf-icon) {
           color: #4ade80;
+        }
+
+        :global(.chat-link) {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 8px 14px;
+          color: #e8eaed;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.15s;
+          text-decoration: none;
+        }
+
+        :global(.chat-link:hover) {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(96, 165, 250, 0.6);
+        }
+
+        :global(.chat-link .chat-icon) {
+          color: #60a5fa;
         }
 
         .search-container {

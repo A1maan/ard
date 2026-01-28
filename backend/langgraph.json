@@ -1,0 +1,9 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "app.graph:make_graph"
+  },
+  "http": {
+    "app": "app.webapp:app"
+  }
+}

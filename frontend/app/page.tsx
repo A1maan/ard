@@ -11,7 +11,7 @@ export default function Home() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([24.7136, 46.6753]); // Saudi Arabia
   const [mapZoom, setMapZoom] = useState(5);
   const [is3D, setIs3D] = useState(false);
-  
+
   const mapRef = useRef<SatelliteMapRef>(null);
 
   const handleSearch = useCallback((query: string) => {
@@ -62,16 +62,12 @@ export default function Home() {
     return distances[Math.min(zoom, distances.length - 1)] || "100 m";
   };
 
-  // Calculate zoom percentage
   const zoomPercentage = Math.round((mapZoom / 18) * 100);
 
   return (
     <div className="earth-app">
-      <EarthHeader
-        projectName="My Farms"
-        onSearch={handleSearch}
-      />
-      
+      <EarthHeader projectName="My Farms" onSearch={handleSearch} />
+
       <div className="map-wrapper">
         <SatelliteMap
           ref={mapRef}
@@ -80,9 +76,9 @@ export default function Home() {
           onCenterChange={setMapCenter}
           onZoomChange={setMapZoom}
         />
-        
+
         <MiniMap center={mapCenter} />
-        
+
         <MapControls
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
@@ -90,12 +86,13 @@ export default function Home() {
           on3DToggle={handle3DToggle}
           is3D={is3D}
         />
-        
+
         <StatusBar
           zoom={zoomPercentage}
           cameraDistance={getCameraDistance(mapZoom)}
           coordinates={{ lat: mapCenter[0], lng: mapCenter[1] }}
         />
+
       </div>
 
       <style jsx>{`
@@ -111,7 +108,9 @@ export default function Home() {
           flex: 1;
           position: relative;
           overflow: hidden;
+          isolation: isolate; /* ✅ helps z-index work over canvases */
         }
+
       `}</style>
     </div>
   );

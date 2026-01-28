@@ -2,13 +2,13 @@
 
 # ARD Soil Intelligence Dashboard
 
-ARD (Arabic for “earth/land”) is a soil-intelligence platform designed for growers, construction crews, and dispatch teams who need the same situational awareness of micro-regions across the United States. The project visualizes county-level telemetry—moisture, organic content, compaction, coverage, uptime, and energy stats—and pairs it with workflows for field operations:
+ARD (Arabic for "earth/land") is a soil-intelligence platform designed for growers, construction crews, and dispatch teams who need the same situational awareness of micro-regions across the United States. The project visualizes county-level telemetry—moisture, organic content, compaction, coverage, uptime, and energy stats—and pairs it with workflows for field operations:
 
 - **Growers** can inspect counties, watch soil-health indicators, and decide when to irrigate, plant, or rotate crops.
 - **Construction teams** can see which zones are safe for heavy equipment, where the ground needs remediation, and how many active sites exist per corridor.
 - **Dispatch/command** can zoom into any region, read the KPIs, narrative summary, and signal shortlist, then reassign crews or assets based on real conditions.
 
-The interactive map, KPI cards, “signals to watch,” and narrative insight offer a single-pane view so teams can coordinate across agriculture and infrastructure projects without juggling multiple dashboards.
+The interactive map, KPI cards, "signals to watch," and narrative insight offer a single-pane view so teams can coordinate across agriculture and infrastructure projects without juggling multiple dashboards.
 
 ## Frontend preview
 
@@ -56,6 +56,53 @@ The backend loads the heavy ML model and feature data, so it must be started sep
 
 *Note: If you modify the prediction logic or the model in* `api_server.py`*, you must manually stop and restart the Uvicorn process.*
 
+### Step 3: Run the Multi-Agent System (Optional)
+
+The backend includes a multi-agent system built with LangGraph for advanced soil analysis and operations assistance.
+
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd backend
+    ```
+
+2.  **Configure environment variables:**
+    
+    Create a `.env` file in the `backend/` directory:
+    ```env
+    # Required
+    LLM_PROVIDER=mistral
+    MISTRAL_API_KEY=your_mistral_key_here
+    LANGGRAPH_DB_URI=postgresql+asyncpg://user:password@localhost:5432/langgraph_db
+    
+    # Recommended (for encryption at rest)
+    LANGGRAPH_AES_KEY=your_32_byte_encryption_key_here
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    pnpm install  # for web UI
+    ```
+
+4.  **Start the agent system:**
+    ```bash
+    langgraph dev --allow-blocking
+    ```
+    
+    The `--allow-blocking` flag is required for:
+    - MCP server communication
+    - Human-in-the-loop interrupts
+    - CLI-style interactions
+    
+    Access the agent interface at: **http://localhost:8000**
+
+**Agent Features:**
+- Multi-agent architecture with specialized subagents for web research and file operations
+- Human-in-the-loop approval workflows for sensitive operations
+- Persistent conversation state with PostgreSQL
+- MCP (Model Context Protocol) tool integration
+- Interactive chat UI with real-time streaming
+
 
 ## Structure
 
@@ -64,9 +111,10 @@ The backend loads the heavy ML model and feature data, so it must be started sep
 - `frontend/app/layout.tsx` – wraps every page with fonts and a shared footer.
 - `frontend/components/AppHeader.tsx` – logo + nav + optional action button.
 - `frontend/app/globals.css` – Tailwind + light soil-themed palette.
+- `backend/` – Multi-agent system with LangGraph, MCP tools, and persistent state management.
 
 ## Customizing
 
 - **Metrics:** `PRESET_METRICS` in `app/page.tsx` seeds data for featured counties. Replace with API calls or realtime feeds for production.
-- **Signals list:** `SIGNAL_REGIONS` controls the right-hand “Signals to watch” shortlist.
+- **Signals list:** `SIGNAL_REGIONS` controls the right-hand "Signals to watch" shortlist.
 - **About content:** edit `HIGHLIGHTS` and paragraphs in `app/about/page.tsx`.

@@ -1,14 +1,19 @@
-# FastAPI server
-fastapi==0.115.6
-uvicorn[standard]==0.32.1
-python-multipart==0.0.18
-
-# ML dependencies (same as Model_and_Results)
-numpy==1.26.4
-pandas==2.2.3
-scikit-learn==1.2.2
-xgboost==2.0.3
-joblib==1.4.2
-
-# CORS
-starlette==0.41.3
+python-dotenv
+langchain
+langchain-core
+langchain-google-genai
+langchain-mistralai
+langchain-mcp-adapters
+fastmcp
+httpx 
+bs4
+tzdata
+pyyaml
+langgraph-checkpoint-postgres 
+fastapi
+langgraph
+langgraph-cli
+langgraph-cli[inmem]
+pycryptodome
+langgraph-checkpoint-firestore
+google-cloud-firestore
