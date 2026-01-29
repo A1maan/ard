@@ -63,6 +63,9 @@ def mistral_tool_content_to_string(
             for block in m.content:
                 if isinstance(block, dict):
                     block = strip_block_id(block)
+                    extras = block.get("extras")
+                    if isinstance(extras, dict):
+                        extras.pop("signature", None)
                     if block.get("type") == "text":
                         parts.append(block.get("text", ""))
                     else:
@@ -90,12 +93,51 @@ def mistral_tool_content_to_string(
     return {"messages": new_messages} if changed else None
 
 
-def provider_middleware(provider: str) -> list:
-    """Return middleware list based on LLM provider."""
-    if provider == "mistral":
-        return [mistral_tool_content_to_string]
-    return []
+# Place this right before or after mistral_tool_content_to_string
+def gemini_output_stitcher(state: AgentState, runtime: Runtime) -> Optional[dict[str, Any]]:
+    """
+    Stitches multi-part Gemini 2.5 responses into a single string.
+    This prevents middlewares from truncating the output.
+    """
+    messages = state.get("messages", [])
+    if not messages:
+        return None
 
+    last_msg = messages[-1]
+    
+    # Check if the last message is an AI message with a list-based content
+    if hasattr(last_msg, "content") and isinstance(last_msg.content, list):
+        # Use our flattened logic to combine all parts
+        stitched_text = flatten_content_to_text(last_msg.content)
+        
+        # Overwrite the message content so subsequent components see a simple string
+        last_msg.content = stitched_text
+        
+        return {"messages": [last_msg]}
+    
+    return None
+
+
+from langchain.agents.factory import AgentMiddleware
+
+# 1. Define the Mistral Wrapper
+class MistralMiddleware(AgentMiddleware):
+    async def __call__(self, state: AgentState, runtime: Runtime):
+        return mistral_tool_content_to_string(state, runtime)
+
+# 2. Define the Gemini Wrapper
+class GeminiMiddleware(AgentMiddleware):
+    async def __call__(self, state: AgentState, runtime: Runtime):
+        return gemini_output_stitcher(state, runtime)
+
+# 3. Update the provider logic
+def provider_middleware(provider: str) -> list:
+    """Return middleware list based on LLM provider using Class-based middleware."""
+    if provider == "google":
+        return [GeminiMiddleware()] 
+    if provider == "mistral":
+        return [MistralMiddleware()]
+    return []
 
 #########################################################################
 # LLM Provider Configuration
@@ -113,14 +155,27 @@ def make_llm(provider: str) -> BaseChatModel:
         )
 
     if provider == "google":
-        from langchain_google_genai import ChatGoogleGenerativeAI
+        from langchain_google_genai import ChatGoogleGenerativeAI, HarmBlockThreshold, HarmCategory
         return ChatGoogleGenerativeAI(
             model=GEMINI_MODEL,
             temperature=0,
             max_retries=2,
             vertexai=True,
+            streaming=True,
+            max_output_tokens=4096,
             project=os.getenv("GOOGLE_CLOUD_PROJECT"),
             location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+            # ADD THIS SAFETY CONFIGURATION
+
+            # Ensure "Thinking" isn't causing the truncation
+            thinking_config={"include_thoughts": True, "thinking_budget": 1024},
+            
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
         )
 
     
@@ -183,6 +238,30 @@ def interrupt_parsed(request):
         return _text_to_decisions(value)
 
     return value
+
+
+def flatten_content_to_text(content):
+    if isinstance(content, str):
+        return content
+
+    parts = []
+    if isinstance(content, list):
+        for block in content: # 'block' is your defined loop variable
+            if isinstance(block, dict):
+                if block.get("type") == "thought":
+                    continue
+                
+                if block.get("type") == "text":
+                    parts.append(block.get("text", ""))
+                elif "text" in block: 
+                    parts.append(block["text"])
+
+            # FIXED: Changed 'part' to 'block'
+            elif isinstance(block, str): 
+                parts.append(block)
+
+        return "".join(parts).strip()
+    return str(content)
 
 
 hitl_mod.interrupt = interrupt_parsed
@@ -328,7 +407,7 @@ async def build_agents(provider: str = "mistral"):
 
     # Wrap subagents as tools for supervisor
     @tool(
-        "web_research",
+        "delegate_web_research",
         description="Web research specialist. Use for web search and opening pages, then summarize findings."
     )
     async def call_web_subagent(query: str) -> str:
@@ -337,7 +416,7 @@ async def build_agents(provider: str = "mistral"):
             {"messages": [{"role": "user", "content": query}]}
         )
         content = result["messages"][-1].content
-        return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
+        return flatten_content_to_text(content)
 
     @tool(
         "ops_files",
@@ -349,7 +428,10 @@ async def build_agents(provider: str = "mistral"):
             {"messages": [{"role": "user", "content": query}]}
         )
         content = result["messages"][-1].content
-        return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
+        return flatten_content_to_text(content)
+    
+    from langgraph.checkpoint.memory import MemorySaver
+    checkpointer = MemorySaver()
 
     # Create supervisor agent with HITL for ops_files tool
     supervisor = create_agent(
@@ -358,7 +440,7 @@ async def build_agents(provider: str = "mistral"):
         system_prompt=prompts["supervisor"]["system"],
         middleware=[
             *provider_middleware(provider),
-            trim_messages,
+            #trim_messages,
             HumanInTheLoopMiddleware(interrupt_on={"ops_files": True}),
         ],
         checkpointer=checkpointer,
@@ -375,11 +457,25 @@ import time
 _chunk_count = 0
 
 def _render_message_chunk(token: AIMessageChunk) -> None:
-    """Render streaming message chunks to console."""
+    # 1. Try standard text
     if token.text:
-        print(token.text, end="", flush=True) # Change end here to observe streaming
-    if token.tool_call_chunks:
-        print(f"\n{token.tool_call_chunks}")
+        print(token.text, end="", flush=True)
+        return
+
+    # 2. Check for multi-part content (common in Gemini 2.5 Flash)
+    if hasattr(token, "content") and isinstance(token.content, list):
+        for part in token.content:
+            if isinstance(part, dict):
+                # Check for standard text parts
+                if part.get("type") == "text":
+                    print(part.get("text", ""), end="", flush=True)
+                # Check for the 'thought' block (Reasoning)
+                elif part.get("type") == "thought":
+                    # You might want to print this in a different color
+                    # print(f"\n[Thinking: {part.get('thought', '')}]", end="")
+                    pass
+            elif isinstance(part, str):
+                print(part, end="", flush=True)
 
 
 def _render_completed_message(message: AnyMessage) -> None:
@@ -387,7 +483,7 @@ def _render_completed_message(message: AnyMessage) -> None:
     if isinstance(message, AIMessage) and message.tool_calls:
         print(f"\nTool calls: {message.tool_calls}")
     if isinstance(message, ToolMessage):
-        print(f"\nTool response: {message.content_blocks}")
+        print(f"\nTool response: {message.content}")
 
 
 def _render_interrupt(interrupt: Interrupt) -> None:
@@ -402,6 +498,10 @@ async def run_supervisor_cli(supervisor, user_text: str) -> None:
     Run supervisor agent with CLI streaming and interrupt handling.
     Continues execution loop until all interrupts are resolved.
     """
+
+    final_model_message = None
+    final_tool_message = None
+
     config = {"configurable": {"thread_id": "supervisor_thread_1"}}
     pending_resume: Command | None = None
 
@@ -415,7 +515,7 @@ async def run_supervisor_cli(supervisor, user_text: str) -> None:
         async for _, stream_mode, data in supervisor.astream(
             input_payload,
             config=config,
-            stream_mode=["messages", "updates"],
+            stream_mode=["messages"],
             subgraphs=True,  # Enable sub-agent interrupt/token support
         ):
             if stream_mode == "messages":
@@ -423,16 +523,57 @@ async def run_supervisor_cli(supervisor, user_text: str) -> None:
                 if isinstance(token, AIMessageChunk):
                     _render_message_chunk(token)
 
+                    # --- ADD THIS DEBUG BLOCK ---
+                    if token.response_metadata.get("finish_reason"):
+                        print(f"\n[DEBUG] Finish Reason: {token.response_metadata.get('finish_reason')}")
+                    if token.response_metadata.get("safety_ratings"):
+                        print(f"[DEBUG] Safety Ratings: {token.response_metadata.get('safety_ratings')}")
+                    # ----------------------------
+
             elif stream_mode == "updates":
                 for source, update in data.items():
-                    if source in ("model", "tools"):
-                        _render_completed_message(update["messages"][-1])
-                    elif source == "__interrupt__":
+                    # Skip empty / None updates
+                    if update is None:
+                        continue
+
+                    # Interrupts come in under a special key
+                    if source == "__interrupt__":
+                        # update is typically a list[Interrupt]
                         interrupts.extend(update)
                         _render_interrupt(update[0])
+                        continue
+
+                    # Normal node updates: expect a dict, possibly with "messages"
+                    if isinstance(update, dict) and update.get("messages"):
+                        msg = update["messages"][-1]
+                        if source == "model":
+                            final_model_message = msg
+                        elif source == "tools":
+                            final_tool_message = msg
+
+                        _render_completed_message(msg)
+
 
         # Exit loop if no interrupts remain
         if not interrupts:
+            if final_model_message and hasattr(final_model_message, "content"):
+                c = final_model_message.content
+                if isinstance(c, str):
+                    print("\n\nFINAL MODEL MESSAGE LENGTH:", len(c))
+                    print("FINAL MODEL MESSAGE PREVIEW:", c[:300])
+                else:
+                    print("\n\nFINAL MODEL MESSAGE TYPE:", type(c))
+                    print("FINAL MODEL MESSAGE PREVIEW:", str(c)[:300])
+
+            if final_tool_message and hasattr(final_tool_message, "content"):
+                c = final_tool_message.content
+                if isinstance(c, str):
+                    print("\nFINAL TOOL MESSAGE LENGTH:", len(c))
+                    print("FINAL TOOL MESSAGE PREVIEW:", c[:300])
+                else:
+                    print("\nFINAL TOOL MESSAGE TYPE:", type(c))
+                    print("FINAL TOOL MESSAGE PREVIEW:", str(c)[:300])
+
             print("\n")
             return
 
@@ -527,14 +668,14 @@ async def test_inmemory_multiple_turns(supervisor):
     # Turn 1: Query for stored label
     await run_supervisor_cli(
         supervisor,
-        "My name is Saad",
+        "say ' slksjfd ksjdf lksjd fsdlkjf skdj' 10 times",
     )
 
     #Additional turns can be uncommented for extended testing
-    await run_supervisor_cli(
-        supervisor,
-        "What was my name?",
-    )
+    # await run_supervisor_cli(
+    #     supervisor,
+    #     "What was my name?",
+    # )
 
 
 async def main():

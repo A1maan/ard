@@ -13,27 +13,67 @@ from langchain_mcp_adapters.interceptors import MCPToolCallRequest
 def load_prompts(path: str | Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
-
+    
 
 async def force_text_only(request: MCPToolCallRequest, handler):
     """
     Convert MCP tool results into plain text only.
     Required for providers like Mistral that expect tool content as strings.
+    Also strips large extras like signatures that can bloat / truncate UI rendering.
     """
     result = await handler(request)
 
+    def strip_signatures(obj: Any) -> Any:
+        """Recursively remove extras.signature keys from dict/list structures."""
+        if isinstance(obj, dict):
+            obj = dict(obj)  # shallow copy
+            extras = obj.get("extras")
+            if isinstance(extras, dict) and "signature" in extras:
+                extras = dict(extras)
+                extras.pop("signature", None)
+                obj["extras"] = extras
+
+            # also remove a top-level "signature" if present
+            obj.pop("signature", None)
+
+            for k, v in list(obj.items()):
+                obj[k] = strip_signatures(v)
+            return obj
+
+        if isinstance(obj, list):
+            return [strip_signatures(x) for x in obj]
+
+        return obj
+
+    # --- Strip from structuredContent (common place for raw blocks) ---
+    if getattr(result, "structuredContent", None) is not None:
+        result.structuredContent = strip_signatures(result.structuredContent)
+
     texts = []
     for part in (result.content or []):
+        # --- Strip from per-part extras if available ---
+        extras = getattr(part, "extras", None)
+        if isinstance(extras, dict) and "signature" in extras:
+            # depending on how TextContent is implemented, this may or may not be assignable
+            try:
+                extras = dict(extras)
+                extras.pop("signature", None)
+                part.extras = extras
+            except Exception:
+                pass
+
+        # Normal text extraction
         if getattr(part, "type", None) == "text":
             texts.append(getattr(part, "text", ""))
 
+    # If there is structuredContent, include it (now sanitized)
     if getattr(result, "structuredContent", None):
-        texts.append(json.dumps(result.structuredContent))
+        texts.append(json.dumps(result.structuredContent, ensure_ascii=False))
 
     joined = "\n".join(t for t in texts if t)
     result.content = [TextContent(type="text", text=joined)]
     result.structuredContent = None
-    
+
     return result
 
 

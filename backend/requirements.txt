@@ -17,3 +17,5 @@ langgraph-cli[inmem]
 pycryptodome
 langgraph-checkpoint-firestore
 google-cloud-firestore
+google-cloud-bigquery[pandas]
+google-cloud-bigquery-storage pyarrow
