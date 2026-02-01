@@ -7,7 +7,7 @@ load_dotenv()
 
 PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.getenv("GEMINI_MODEL")
 
 print("ENV CHECK:", PROJECT, LOCATION, MODEL)  # temporary debug
 
