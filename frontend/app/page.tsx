@@ -1,39 +1,42 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { EarthHeader } from "@/components/EarthHeader";
 import { SatelliteMap, type SatelliteMapRef } from "@/components/SatelliteMap";
-import { MapControls } from "@/components/MapControls";
 import { StatusBar } from "@/components/StatusBar";
 import { MiniMap } from "@/components/MiniMap";
+import { FarmMarkers } from "@/components/FarmMarkers";
+import { api, type FarmListItem } from "@/lib/api";
+import type L from "leaflet";
 
 export default function Home() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([24.7136, 46.6753]); // Saudi Arabia
   const [mapZoom, setMapZoom] = useState(5);
-  const [is3D, setIs3D] = useState(false);
+  const [farms, setFarms] = useState<FarmListItem[]>([]);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
   const mapRef = useRef<SatelliteMapRef>(null);
+
+  // Fetch farms on mount
+  useEffect(() => {
+    async function fetchFarms() {
+      try {
+        const response = await api.getFarms(50);
+        setFarms(response.farms);
+      } catch (err) {
+        console.error("Failed to fetch farms:", err);
+      }
+    }
+    fetchFarms();
+  }, []);
+
+  const handleMapReady = useCallback((map: unknown) => {
+    setMapInstance(map as L.Map);
+  }, []);
 
   const handleSearch = useCallback((query: string) => {
     console.log("Searching for:", query);
     // TODO: Implement geocoding search
-  }, []);
-
-  const handleZoomIn = useCallback(() => {
-    setMapZoom((prev) => Math.min(prev + 1, 18));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setMapZoom((prev) => Math.max(prev - 1, 1));
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setMapCenter([24.7136, 46.6753]);
-    setMapZoom(5);
-  }, []);
-
-  const handle3DToggle = useCallback(() => {
-    setIs3D((prev) => !prev);
   }, []);
 
   // Calculate camera distance based on zoom level
@@ -75,17 +78,16 @@ export default function Home() {
           zoom={mapZoom}
           onCenterChange={setMapCenter}
           onZoomChange={setMapZoom}
+          onMapReady={handleMapReady}
+        />
+
+        {/* Farm markers layer */}
+        <FarmMarkers 
+          map={mapInstance} 
+          farms={farms}
         />
 
         <MiniMap center={mapCenter} />
-
-        <MapControls
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onReset={handleReset}
-          on3DToggle={handle3DToggle}
-          is3D={is3D}
-        />
 
         <StatusBar
           zoom={zoomPercentage}

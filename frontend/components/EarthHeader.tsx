@@ -15,7 +15,6 @@ import {
   Settings,
   ChevronDown,
   Leaf,
-  MessageSquare,
 } from "lucide-react";
 
 type EarthHeaderProps = {
@@ -73,12 +72,6 @@ export function EarthHeader({
         <Link href="/farms" className="farms-link">
           <Leaf size={14} className="leaf-icon" />
           <span>{projectName}</span>
-        </Link>
-
-        {/* Chat Link */}
-        <Link href="/chat" className="chat-link">
-          <MessageSquare size={14} className="chat-icon" />
-          <span>Chat</span>
         </Link>
 
         {/* Search Bar */}
