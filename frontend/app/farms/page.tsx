@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ChatWidget as ChatWidgetUI, type ChatWidgetProps } from "chat-widget";
 
 export function ChatWidgetDemo(props: ChatWidgetProps) {
@@ -18,10 +19,31 @@ export function ChatWidgetDemo(props: ChatWidgetProps) {
 
 
 import Link from "next/link";
-import { ArrowLeft, MapPin, Leaf, Plus } from "lucide-react";
+import { ArrowLeft, MapPin, Leaf, Plus, Loader2 } from "lucide-react";
+import { api, type FarmListItem } from "@/lib/api";
 import { FARMS_DATA } from "@/components/FarmsDropdown";
 
 export default function FarmsPage() {
+  const [farms, setFarms] = useState<FarmListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchFarms() {
+      try {
+        const response = await api.getFarms(50);
+        setFarms(response.farms);
+      } catch (err) {
+        console.error("Failed to fetch farms:", err);
+        setError(err instanceof Error ? err.message : "Failed to load farms");
+        setFarms(FARMS_DATA as FarmListItem[]); // Fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFarms();
+  }, []);
+
   const getHealthColor = (score: number) => {
     if (score >= 80) return "#4ade80";
     if (score >= 60) return "#facc15";
@@ -33,6 +55,35 @@ export default function FarmsPage() {
     if (health === "warning") return "Needs Attention";
     return "Critical";
   };
+
+  if (loading) {
+    return (
+      <main className="farms-page loading">
+        <Loader2 size={48} className="spin" />
+        <p>Loading farms...</p>
+        <style jsx>{`
+          .farms-page.loading {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: #9aa0a6;
+          }
+          .farms-page.loading :global(.spin) {
+            animation: spin 1s linear infinite;
+            color: #4ade80;
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </main>
+    );
+  }
 
   return (
     <main className="farms-page">
@@ -51,8 +102,14 @@ export default function FarmsPage() {
         </button>
       </header>
 
+      {error && (
+        <div className="error-banner">
+          <p>⚠️ {error} - Showing sample data</p>
+        </div>
+      )}
+
       <div className="farms-grid">
-        {FARMS_DATA.map((farm) => (
+        {farms.map((farm) => (
           <Link href={`/farm/${farm.id}`} key={farm.id} className="farm-card">
             <div className="farm-card-header">
               <div className="farm-icon-wrapper">
@@ -302,6 +359,20 @@ export default function FarmsPage() {
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        .error-banner {
+          background: rgba(248, 113, 113, 0.1);
+          border: 1px solid rgba(248, 113, 113, 0.3);
+          border-radius: 8px;
+          padding: 12px 16px;
+          margin-bottom: 24px;
+          color: #f87171;
+          font-size: 14px;
+        }
+
+        .error-banner p {
+          margin: 0;
         }
       `}</style>
     </main>

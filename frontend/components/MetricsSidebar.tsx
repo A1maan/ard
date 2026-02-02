@@ -14,8 +14,10 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle,
+  Sprout,
 } from "lucide-react";
 import type { Farm } from "./FarmsDropdown";
+import type { FarmFertilizerAnalysis, FarmCropAnalysis } from "@/lib/api";
 
 type MetricSection = {
   id: string;
@@ -33,12 +35,26 @@ type MetricSection = {
 
 type MetricsSidebarProps = {
   farm: Farm;
+  fertilizerAnalysis?: FarmFertilizerAnalysis;
+  cropAnalysis?: FarmCropAnalysis;
 };
 
-export function MetricsSidebar({ farm }: MetricsSidebarProps) {
+export function MetricsSidebar({ farm, fertilizerAnalysis, cropAnalysis }: MetricsSidebarProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const variance = (farm.healthScore - 70) / 30;
+
+  // Helper to get status from fertilizer analysis
+  const getStatus = (status?: string): "good" | "warning" | "critical" => {
+    if (!status) return "good";
+    if (status === "optimal" || status === "adequate" || status === "high") return "good";
+    if (status === "low" || status === "very_low" || status === "excessive") return "warning";
+    if (status === "critical") return "critical";
+    return "good";
+  };
+
+  // Use real data from fertilizer analysis if available
+  const soilData = fertilizerAnalysis?.soil_analysis;
 
   const sections: MetricSection[] = [
     {
@@ -94,26 +110,38 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
       metrics: [
         {
           name: "Nitrogen (N)",
-          value: Math.round(42 + variance * 20),
-          unit: "ppm",
-          status: farm.healthScore > 80 ? "good" : farm.healthScore > 60 ? "warning" : "critical",
-          optimal: "40-60 ppm",
-          trend: "down",
+          value: soilData?.nitrogen && 'value' in soilData.nitrogen 
+            ? (soilData.nitrogen.value * 100).toFixed(2) 
+            : Math.round(42 + variance * 20),
+          unit: soilData?.nitrogen && 'unit' in soilData.nitrogen ? soilData.nitrogen.unit : "ppm",
+          status: soilData?.nitrogen && 'status' in soilData.nitrogen 
+            ? getStatus(soilData.nitrogen.status) 
+            : (farm.healthScore > 80 ? "good" : farm.healthScore > 60 ? "warning" : "critical"),
+          optimal: "0.1-0.2 %",
+          trend: "stable",
         },
         {
           name: "Phosphorus (P)",
-          value: Math.round(28 + variance * 10),
-          unit: "ppm",
-          status: "good",
-          optimal: "25-50 ppm",
+          value: soilData?.phosphorus && 'value' in soilData.phosphorus 
+            ? soilData.phosphorus.value.toFixed(1) 
+            : Math.round(28 + variance * 10),
+          unit: soilData?.phosphorus && 'unit' in soilData.phosphorus ? soilData.phosphorus.unit : "mg/kg",
+          status: soilData?.phosphorus && 'status' in soilData.phosphorus 
+            ? getStatus(soilData.phosphorus.status) 
+            : "good",
+          optimal: "25-50 mg/kg",
           trend: "stable",
         },
         {
           name: "Potassium (K)",
-          value: Math.round(180 + variance * 40),
-          unit: "ppm",
-          status: farm.healthScore > 70 ? "good" : "warning",
-          optimal: "150-250 ppm",
+          value: soilData?.potassium && 'value' in soilData.potassium 
+            ? soilData.potassium.value.toFixed(1) 
+            : Math.round(180 + variance * 40),
+          unit: soilData?.potassium && 'unit' in soilData.potassium ? soilData.potassium.unit : "mg/kg",
+          status: soilData?.potassium && 'status' in soilData.potassium 
+            ? getStatus(soilData.potassium.status) 
+            : (farm.healthScore > 70 ? "good" : "warning"),
+          optimal: "150-250 mg/kg",
           trend: "up",
         },
       ],
@@ -125,18 +153,26 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
       metrics: [
         {
           name: "Soil pH",
-          value: (6.5 + variance * 0.5).toFixed(1),
+          value: soilData?.ph && 'value' in soilData.ph 
+            ? soilData.ph.value.toFixed(2) 
+            : (6.5 + variance * 0.5).toFixed(1),
           unit: "",
-          status: farm.healthScore > 75 ? "good" : "warning",
-          optimal: "6.0-7.0",
+          status: soilData?.ph && 'status' in soilData.ph 
+            ? getStatus(soilData.ph.status) 
+            : (farm.healthScore > 75 ? "good" : "warning"),
+          optimal: "6.0-7.5",
           trend: "stable",
         },
         {
-          name: "Buffer pH",
-          value: (7.0 + variance * 0.3).toFixed(1),
-          unit: "",
-          status: "good",
-          optimal: "6.8-7.2",
+          name: "CEC",
+          value: soilData?.cec && 'value' in soilData.cec 
+            ? soilData.cec.value.toFixed(1) 
+            : (7.0 + variance * 0.3).toFixed(1),
+          unit: soilData?.cec && 'unit' in soilData.cec ? soilData.cec.unit : "cmolc/kg",
+          status: soilData?.cec && 'status' in soilData.cec 
+            ? getStatus(soilData.cec.status) 
+            : "good",
+          optimal: "15-25 cmolc/kg",
           trend: "stable",
         },
       ],
@@ -148,18 +184,26 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
       metrics: [
         {
           name: "Organic Carbon",
-          value: (2.8 + variance * 0.8).toFixed(1),
+          value: soilData?.organic_carbon && 'value' in soilData.organic_carbon 
+            ? soilData.organic_carbon.value.toFixed(2) 
+            : (2.8 + variance * 0.8).toFixed(1),
           unit: "%",
-          status: farm.healthScore > 65 ? "good" : "warning",
-          optimal: "2.5-4.0%",
+          status: soilData?.organic_carbon && 'status' in soilData.organic_carbon 
+            ? getStatus(soilData.organic_carbon.status) 
+            : (farm.healthScore > 65 ? "good" : "warning"),
+          optimal: "1.5-3.0%",
           trend: "up",
         },
         {
-          name: "Humus Content",
-          value: (4.2 + variance * 1.0).toFixed(1),
-          unit: "%",
-          status: "good",
-          optimal: "3.5-5.5%",
+          name: "Calcium",
+          value: soilData?.calcium && 'value' in soilData.calcium 
+            ? soilData.calcium.value.toFixed(0) 
+            : (4.2 + variance * 1.0).toFixed(1),
+          unit: soilData?.calcium && 'unit' in soilData.calcium ? soilData.calcium.unit : "mg/kg",
+          status: soilData?.calcium && 'status' in soilData.calcium 
+            ? getStatus(soilData.calcium.status) 
+            : "good",
+          optimal: "1000-2000 mg/kg",
           trend: "stable",
         },
       ],
@@ -170,19 +214,27 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
       label: "Conductivity",
       metrics: [
         {
-          name: "EC Level",
-          value: (1.2 + variance * 0.4).toFixed(1),
-          unit: "dS/m",
-          status: farm.healthScore > 75 ? "good" : "warning",
-          optimal: "0.8-1.6 dS/m",
+          name: "EC Level (Salinity)",
+          value: soilData?.salinity && 'value' in soilData.salinity 
+            ? soilData.salinity.value.toFixed(2) 
+            : (1.2 + variance * 0.4).toFixed(1),
+          unit: soilData?.salinity && 'unit' in soilData.salinity ? soilData.salinity.unit : "dS/m",
+          status: soilData?.salinity && 'status' in soilData.salinity 
+            ? getStatus(soilData.salinity.status) 
+            : (farm.healthScore > 75 ? "good" : "warning"),
+          optimal: "<2 dS/m",
           trend: "stable",
         },
         {
-          name: "CEC",
-          value: Math.round(18 + variance * 6),
-          unit: "meq/100g",
-          status: "good",
-          optimal: "15-25 meq/100g",
+          name: "Magnesium",
+          value: soilData?.magnesium && 'value' in soilData.magnesium 
+            ? soilData.magnesium.value.toFixed(0) 
+            : Math.round(18 + variance * 6),
+          unit: soilData?.magnesium && 'unit' in soilData.magnesium ? soilData.magnesium.unit : "mg/kg",
+          status: soilData?.magnesium && 'status' in soilData.magnesium 
+            ? getStatus(soilData.magnesium.status) 
+            : "good",
+          optimal: "100-300 mg/kg",
           trend: "up",
         },
       ],
@@ -194,7 +246,9 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
       metrics: [
         {
           name: "Sand",
-          value: 45,
+          value: soilData?.texture && 'sand_pct' in soilData.texture 
+            ? soilData.texture.sand_pct.toFixed(1) 
+            : 45,
           unit: "%",
           status: "good",
           optimal: "40-60%",
@@ -202,7 +256,9 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
         },
         {
           name: "Silt",
-          value: 35,
+          value: soilData?.texture && 'silt_pct' in soilData.texture 
+            ? soilData.texture.silt_pct.toFixed(1) 
+            : 35,
           unit: "%",
           status: "good",
           optimal: "25-45%",
@@ -210,7 +266,9 @@ export function MetricsSidebar({ farm }: MetricsSidebarProps) {
         },
         {
           name: "Clay",
-          value: 20,
+          value: soilData?.texture && 'clay_pct' in soilData.texture 
+            ? soilData.texture.clay_pct.toFixed(1) 
+            : 20,
           unit: "%",
           status: "good",
           optimal: "15-30%",

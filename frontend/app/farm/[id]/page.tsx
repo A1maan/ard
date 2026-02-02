@@ -3,20 +3,23 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { SatelliteMap, type SatelliteMapRef } from "@/components/SatelliteMap";
 import { MapControls } from "@/components/MapControls";
 import { StatusBar } from "@/components/StatusBar";
 import { MetricsSidebar } from "@/components/MetricsSidebar";
 import { SoilHeatmapLayer } from "@/components/SoilHeatmapLayer";
 import { ChatButton } from "@/components/ChatButton";
+import { api, type FarmDetail } from "@/lib/api";
 import { FARMS_DATA, type Farm } from "@/components/FarmsDropdown";
 
 export default function FarmPage() {
   const params = useParams();
   const farmId = params.id as string;
   
-  const [farm, setFarm] = useState<Farm | null>(null);
+  const [farm, setFarm] = useState<FarmDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([24.7136, 46.6753]);
   const [mapZoom, setMapZoom] = useState(12);
   const [is3D, setIs3D] = useState(false);
@@ -25,11 +28,27 @@ export default function FarmPage() {
   const mapRef = useRef<SatelliteMapRef>(null);
 
   useEffect(() => {
-    const foundFarm = FARMS_DATA.find(f => f.id === farmId);
-    if (foundFarm) {
-      setFarm(foundFarm);
-      setMapCenter(foundFarm.coordinates);
+    async function fetchFarm() {
+      setLoading(true);
+      setError(null);
+      try {
+        const farmData = await api.getFarm(farmId);
+        setFarm(farmData);
+        setMapCenter(farmData.coordinates);
+      } catch (err) {
+        console.error("Failed to fetch farm:", err);
+        setError(err instanceof Error ? err.message : "Failed to load farm");
+        // Fallback to local data
+        const fallbackFarm = FARMS_DATA.find(f => f.id === farmId);
+        if (fallbackFarm) {
+          setFarm(fallbackFarm as FarmDetail);
+          setMapCenter(fallbackFarm.coordinates);
+        }
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchFarm();
   }, [farmId]);
 
   useEffect(() => {
@@ -56,19 +75,55 @@ export default function FarmPage() {
     setIs3D((prev) => !prev);
   }, []);
 
-  if (!farm) {
+  if (loading) {
     return (
       <div className="loading-page">
+        <Loader2 size={48} className="spin" />
         <p>Loading farm data...</p>
         <style jsx>{`
           .loading-page {
             width: 100vw;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 16px;
             background: #1a1a2e;
             color: #9aa0a6;
+          }
+          .loading-page :global(.spin) {
+            animation: spin 1s linear infinite;
+            color: #4ade80;
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!farm) {
+    return (
+      <div className="loading-page">
+        <p>Farm not found</p>
+        <Link href="/farms">Back to My Farms</Link>
+        <style jsx>{`
+          .loading-page {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background: #1a1a2e;
+            color: #9aa0a6;
+          }
+          .loading-page :global(a) {
+            color: #4ade80;
           }
         `}</style>
       </div>
@@ -99,7 +154,11 @@ export default function FarmPage() {
       {/* Main Content */}
       <div className="farm-content">
         {/* Metrics Sidebar - Fixed position outside map */}
-        <MetricsSidebar farm={farm} />
+        <MetricsSidebar 
+          farm={farm} 
+          fertilizerAnalysis={farm.farm_fertilizer_analysis}
+          cropAnalysis={farm.farm_crop_analysis}
+        />
 
         {/* Map Area */}
         <div className="map-area">

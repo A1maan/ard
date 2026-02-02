@@ -2,70 +2,22 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, MapPin, Leaf } from "lucide-react";
+import { ChevronDown, MapPin, Leaf, Loader2 } from "lucide-react";
+import { api, type FarmListItem } from "@/lib/api";
 
-export type Farm = {
-  id: string;
-  name: string;
-  location: string;
-  coordinates: [number, number]; // [lat, lng]
-  size: string;
-  soilType: string;
-  health: "good" | "warning" | "critical";
-  healthScore: number;
-};
+export type Farm = FarmListItem;
 
-// Sample farms data
+// Sample farms data (fallback)
 export const FARMS_DATA: Farm[] = [
   {
-    id: "farm-1",
-    name: "Al Kharj Farm",
-    location: "Al Kharj, Saudi Arabia",
+    id: "1",
+    name: "Farm 1",
+    location: "Sample Location",
     coordinates: [24.1500, 47.3000],
-    size: "250 hectares",
-    soilType: "Sandy Loam",
-    health: "warning",
-    healthScore: 78,
-  },
-  {
-    id: "farm-2",
-    name: "Tabuk Agricultural Project",
-    location: "Tabuk, Saudi Arabia",
-    coordinates: [28.3838, 36.5550],
-    size: "180 hectares",
-    soilType: "Clay Loam",
+    size: "N/A",
+    soilType: "Unknown",
     health: "good",
-    healthScore: 85,
-  },
-  {
-    id: "farm-3",
-    name: "Qassim Date Plantation",
-    location: "Buraydah, Saudi Arabia",
-    coordinates: [26.3260, 43.9750],
-    size: "320 hectares",
-    soilType: "Sandy",
-    health: "warning",
-    healthScore: 72,
-  },
-  {
-    id: "farm-4",
-    name: "Jizan Tropical Farm",
-    location: "Jizan, Saudi Arabia",
-    coordinates: [16.8892, 42.5511],
-    size: "150 hectares",
-    soilType: "Alluvial",
-    health: "good",
-    healthScore: 88,
-  },
-  {
-    id: "farm-5",
-    name: "Hail Wheat Fields",
-    location: "Hail, Saudi Arabia",
-    coordinates: [27.5114, 41.7208],
-    size: "400 hectares",
-    soilType: "Loamy Sand",
-    health: "critical",
-    healthScore: 65,
+    healthScore: 75,
   },
 ];
 
@@ -77,7 +29,29 @@ export function FarmsDropdown({
   projectName = "My Farms",
 }: FarmsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [farms, setFarms] = useState<Farm[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch farms from API
+  useEffect(() => {
+    async function fetchFarms() {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await api.getFarms(20);
+        setFarms(response.farms);
+      } catch (err) {
+        console.error("Failed to fetch farms:", err);
+        setError(err instanceof Error ? err.message : "Failed to load farms");
+        setFarms(FARMS_DATA); // Fallback to sample data
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFarms();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -114,16 +88,28 @@ export function FarmsDropdown({
         <div className="dropdown-menu">
           <div className="dropdown-header">
             <span>Your Farms</span>
-            <span className="farm-count">{FARMS_DATA.length} locations</span>
+            <span className="farm-count">
+              {loading ? "Loading..." : `${farms.length} locations`}
+            </span>
           </div>
           <div className="dropdown-list">
-            {FARMS_DATA.map((farm) => (
-              <Link
-                key={farm.id}
-                href={`/farm/${farm.id}`}
-                className="farm-item"
-                onClick={() => setIsOpen(false)}
-              >
+            {loading ? (
+              <div className="loading-state">
+                <Loader2 size={20} className="spin" />
+                <span>Loading farms...</span>
+              </div>
+            ) : error ? (
+              <div className="error-state">
+                <span>{error}</span>
+              </div>
+            ) : (
+              farms.map((farm) => (
+                <Link
+                  key={farm.id}
+                  href={`/farm/${farm.id}`}
+                  className="farm-item"
+                  onClick={() => setIsOpen(false)}
+                >
                 <div className="farm-info">
                   <MapPin size={14} className="pin-icon" />
                   <div className="farm-details">
@@ -139,7 +125,8 @@ export function FarmsDropdown({
                   <span className="health-score">{farm.healthScore}%</span>
                 </div>
               </Link>
-            ))}
+              ))
+            )}
           </div>
           <div className="dropdown-footer">
             <button className="add-farm-btn">
@@ -306,6 +293,30 @@ export function FarmsDropdown({
           color: #9aa0a6;
           font-size: 12px;
           min-width: 32px;
+        }
+
+        .loading-state,
+        .error-state {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 24px 16px;
+          color: #9aa0a6;
+          font-size: 13px;
+        }
+
+        .error-state {
+          color: #f87171;
+        }
+
+        .loading-state :global(.spin) {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .dropdown-footer {

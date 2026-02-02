@@ -3,6 +3,7 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const FARMS_API_URL = process.env.NEXT_PUBLIC_FARMS_API_URL || 'http://localhost:8001';
 
 export interface SoilProperty {
   name: string;
@@ -149,6 +150,128 @@ class ApiClient {
   async getSample(sampleIdx: number): Promise<Sample> {
     return this.fetch<Sample>(`/api/samples/${sampleIdx}`);
   }
+
+  /**
+   * Get list of farms from BigQuery
+   */
+  async getFarms(limit: number = 50): Promise<FarmsListResponse> {
+    const url = `${FARMS_API_URL}/api/farms?limit=${limit}`;
+    try {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: response.statusText }));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error('Unable to connect to Farms API server. Is the backend running?');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed farm data including soil metrics and recommendations
+   */
+  async getFarm(farmId: string): Promise<FarmDetail> {
+    const url = `${FARMS_API_URL}/api/farms/${farmId}`;
+    try {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: response.statusText }));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error('Unable to connect to Farms API server. Is the backend running?');
+      }
+      throw error;
+    }
+  }
+}
+
+// Farm types
+export interface FarmListItem {
+  id: string;
+  name: string;
+  location: string;
+  coordinates: [number, number];
+  size: string;
+  soilType: string;
+  health: 'good' | 'warning' | 'critical';
+  healthScore: number;
+}
+
+export interface FarmsListResponse {
+  farms: FarmListItem[];
+  total: number;
+}
+
+export interface SoilAnalysisNutrient {
+  value: number;
+  unit: string;
+  status: string;
+}
+
+export interface FertilizerRecommendation {
+  nutrient: string;
+  priority: number;
+  status: string;
+  current_value: string;
+  target: string;
+  products?: Array<{
+    name: string;
+    analysis: string;
+    rate: string;
+    note: string;
+  }>;
+  note?: string;
+}
+
+export interface FarmFertilizerAnalysis {
+  farm_soil_health: {
+    overall_status: string;
+    critical_issues_count: number;
+    moderate_issues_count: number;
+    warnings_count: number;
+  };
+  soil_analysis: Record<string, SoilAnalysisNutrient | { clay_pct: number; sand_pct: number; silt_pct: number }>;
+  recommendations: FertilizerRecommendation[];
+  warnings: string[];
+  general_advice: string[];
+  target_crop: string;
+}
+
+export interface CropRecommendation {
+  crop: string;
+  category: string;
+  score: number;
+  rating: string;
+  positives: string[];
+  issues: string[];
+  notes: string;
+}
+
+export interface FarmCropAnalysis {
+  row_id: number;
+  location: string | null;
+  soil_summary: Record<string, unknown>;
+  constraints: string[];
+  top_5_crops: CropRecommendation[];
+  all_suitable: CropRecommendation[];
+  not_recommended: CropRecommendation[];
+}
+
+export interface FarmDetail extends FarmListItem {
+  farm_fertilizer_analysis?: FarmFertilizerAnalysis;
+  farm_crop_analysis?: FarmCropAnalysis;
+  raw_predictions?: Record<string, number>;
 }
 
 // Export singleton instance
