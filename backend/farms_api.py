@@ -94,9 +94,17 @@ async def get_farm(farm_id: str):
         row_id = int(farm_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid farm ID format")
-    
+
+
+
     try:
         farm = get_farm_by_id(row_id)
+        # Open the file 'new_file.txt' in write mode ('w')
+        try:
+            with open('farm_value_file.txt', 'w') as f:
+                f.write(str(farm))
+        except Exception as e:
+            print(f"An error occurred: {e}")
         if farm is None:
             raise HTTPException(status_code=404, detail="Farm not found")
         return FarmDetailResponse(**farm)

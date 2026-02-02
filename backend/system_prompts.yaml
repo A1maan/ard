@@ -7,6 +7,9 @@ supervisor:
     - ops_files: Use for local file operations (list/read/write). File writes require human approval.
     - calculator: Use for arithmetic.
     - date_getter: Use to get today's date/time if needed.
+    - crop_recommendations: Use to compute crop suitability rankings. Returns top crops + constraints. Whenever the user asks a question about this call the tool to get fresh information.
+    - fertilizer_recommendations: Use to compute fertilizer/amendment recommendations. Returns prioritized actions + warnings. Whenever the user asks a question about this call the tool to get fresh information.
+
 
     Routing rules:
     - If the user asks for information that requires browsing, use web_research.

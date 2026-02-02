@@ -51,6 +51,10 @@ from utils import (
     load_prompts,
 )
 
+from tools.crops import get_crop_recommendations
+from tools.fertilizer import get_fertilizer_recommendations, get_recommendations_simple
+
+
 # Windows event loop policy fix
 if sys.platform.startswith("win"):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -376,6 +380,42 @@ async def build_agents(provider: str = "mistral"):
     here = Path(__file__).resolve().parent
     tools_dir = here / "tools"
 
+    ###################################################
+    #Khatib's tools'
+    from langchain.tools import tool
+    from typing import Optional
+    import json
+
+
+    @tool(
+        "crop_recommendations",
+        description=(
+            "Recommend suitable crops from soil properties. "
+            "Returns JSON with top crops, constraints, and soil summary."
+        ),
+    )
+    def crop_recommendations() -> str:
+        """
+        get crop recommendations
+        """
+        result = get_crop_recommendations()
+        return json.dumps(result, ensure_ascii=False)
+
+
+    @tool(
+        "fertilizer_recommendations",
+        description=(
+            "Generate fertilizer/amendment recommendations.  Returns JSON."
+        ),
+    )
+    def fertilizer_recommendations(
+    ) -> str:
+        result = get_fertilizer_recommendations(
+        )
+        return json.dumps(result, ensure_ascii=False)
+
+    ###########################################################
+
     supervisor_server = tools_dir / "supervisor_tools_server.py"
     web_server = tools_dir / "web_tools_server.py"
     ops_server = tools_dir / "ops_tools_server.py"
@@ -496,12 +536,15 @@ async def build_agents(provider: str = "mistral"):
 
     # Use MemorySaver for in-memory checkpointing (temporary override)
     from langgraph.checkpoint.memory import MemorySaver
-    checkpointer = MemorySaver()
+    checkpointer = FirestoreSaver(
+    project_id=os.environ["GOOGLE_CLOUD_PROJECT"],  
+    checkpoints_collection="langgraph_checkpoints",
+    )
 
     # Create supervisor agent with HITL for ops_files tool
     supervisor = create_agent(
         model=llm,
-        tools=[*supervisor_native_tools, call_web_subagent, call_ops_subagent],
+        tools=[*supervisor_native_tools, call_web_subagent, call_ops_subagent, crop_recommendations, fertilizer_recommendations],
         system_prompt=prompts["supervisor"]["system"],
         middleware=[
             *provider_middleware(provider),
