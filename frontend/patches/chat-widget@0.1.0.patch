@@ -1,0 +1,190 @@
+diff --git a/dist/index.js b/dist/index.js
+index 3a31c0c5b757dd78e6f5ddfa13e3177543f71b3e..c38877284d78c2903832acc6a596b501ccb2da00 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -3178,7 +3178,7 @@ function AssistantMessage({
+   if (isToolResult && hideToolCalls) {
+     return null;
+   }
+-  return /* @__PURE__ */ jsx25("div", { className: "group mr-auto flex w-full items-start gap-2", children: /* @__PURE__ */ jsx25("div", { className: "flex w-full flex-col gap-2", children: isToolResult ? /* @__PURE__ */ jsxs16(Fragment4, { children: [
++  return /* @__PURE__ */ jsx25("div", { className: "chat-message-row chat-message-row--assistant group flex w-full items-start gap-2", children: /* @__PURE__ */ jsx25("div", { className: "flex w-full flex-col gap-2", children: isToolResult ? /* @__PURE__ */ jsxs16(Fragment4, { children: [
+     /* @__PURE__ */ jsx25(ToolResult, { message }),
+     /* @__PURE__ */ jsx25(
+       Interrupt,
+@@ -3466,7 +3466,7 @@ function HumanMessage({
+     "div",
+     {
+       className: cn(
+-        "group ml-auto flex items-center gap-2",
++        "chat-message-row chat-message-row--human group flex w-full items-center gap-2",
+         isEditing && "w-full max-w-xl"
+       ),
+       children: /* @__PURE__ */ jsxs18("div", { className: cn("flex flex-col gap-2", isEditing && "w-full"), children: [
+@@ -3496,7 +3496,7 @@ function HumanMessage({
+             },
+             []
+           ) }),
+-          contentString ? /* @__PURE__ */ jsx27("p", { className: "bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap", children: contentString }) : null
++          contentString ? /* @__PURE__ */ jsx27("p", { className: "user-bubble bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap", children: contentString }) : null
+         ] }),
+         /* @__PURE__ */ jsxs18(
+           "div",
+@@ -3753,10 +3753,15 @@ function ThreadHistoryLoading() {
+     `skeleton-${i}`
+   )) });
+ }
+-function ThreadHistory() {
++function ThreadHistory({
++  open,
++  onOpenChange
++}) {
+   const stream = useStreamContext();
+   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
+-  const [chatHistoryOpen, setChatHistoryOpen] = useState15(false);
++  const chatHistoryOpen = open ?? false;
++  const setChatHistoryOpen = onOpenChange ?? (() => {
++  });
+   const { getThreads, threads, setThreads, threadsLoading, setThreadsLoading } = useThreads();
+   useEffect8(() => {
+     if (typeof window === "undefined") return;
+@@ -4163,7 +4168,10 @@ function Thread() {
+   const [artifactContext, setArtifactContext] = useArtifactContext();
+   const [artifactOpen, closeArtifact] = useArtifactOpen();
+   const [chatHistoryOpen, setChatHistoryOpen] = useState17(false);
+-  const [hideToolCalls, setHideToolCalls] = useState17(false);
++  const [hideToolCalls, setHideToolCalls] = useQueryState2(
++    "hideToolCalls",
++    parseAsBoolean.withDefault(false)
++  );
+   const [input, setInput] = useState17("");
+   const {
+     contentBlocks,
+@@ -4279,7 +4287,7 @@ function Thread() {
+           {
+             className: "relative h-full",
+             style: { width: 300 },
+-            children: /* @__PURE__ */ jsx34(ThreadHistory, {})
++            children: /* @__PURE__ */ jsx34(ThreadHistory, { open: chatHistoryOpen, onOpenChange: setChatHistoryOpen })
+           }
+         )
+       }
+@@ -4307,7 +4315,7 @@ function Thread() {
+               transition: isLargeScreen ? { type: "spring", stiffness: 300, damping: 30 } : { duration: 0 },
+               children: [
+                 !chatStarted && /* @__PURE__ */ jsxs22("div", { className: "absolute top-0 left-0 z-10 flex w-full items-center justify-between gap-3 p-2 pl-4", children: [
+-                  /* @__PURE__ */ jsx34("div", { children: (!chatHistoryOpen || !isLargeScreen) && /* @__PURE__ */ jsx34(
++                  /* @__PURE__ */ jsx34("div", { children: /* @__PURE__ */ jsx34(
+                     Button,
+                     {
+                       className: "hover:bg-gray-100",
+@@ -4320,7 +4328,7 @@ function Thread() {
+                 ] }),
+                 chatStarted && /* @__PURE__ */ jsxs22("div", { className: "relative z-10 flex items-center justify-between gap-3 p-2", children: [
+                   /* @__PURE__ */ jsxs22("div", { className: "relative flex items-center justify-start gap-2", children: [
+-                    /* @__PURE__ */ jsx34("div", { className: "absolute left-0 z-10", children: (!chatHistoryOpen || !isLargeScreen) && /* @__PURE__ */ jsx34(
++                    /* @__PURE__ */ jsx34("div", { className: "absolute left-0 z-10", children: /* @__PURE__ */ jsx34(
+                       Button,
+                       {
+                         className: "hover:bg-gray-100",
+@@ -4424,7 +4432,7 @@ function Thread() {
+                         {
+                           ref: dropRef,
+                           className: cn(
+-                            "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
++                            "chat-input-shell bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
+                             dragOver ? "border-primary border-2 border-dotted" : "border border-solid"
+                           ),
+                           children: /* @__PURE__ */ jsxs22(
+@@ -4440,25 +4448,47 @@ function Thread() {
+                                     onRemove: removeBlock
+                                   }
+                                 ),
+-                                /* @__PURE__ */ jsx34(
+-                                  "textarea",
+-                                  {
+-                                    value: input,
+-                                    onChange: (e) => setInput(e.target.value),
+-                                    onPaste: handlePaste,
+-                                    onKeyDown: (e) => {
+-                                      if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.nativeEvent.isComposing) {
+-                                        e.preventDefault();
+-                                        const el = e.target;
+-                                        const form = el?.closest("form");
+-                                        form?.requestSubmit();
+-                                      }
++                                /* @__PURE__ */ jsxs22("div", { className: "chat-input-row flex items-end gap-3", children: [
++                                  /* @__PURE__ */ jsx34(
++                                    "textarea",
++                                    {
++                                      value: input,
++                                      onChange: (e) => setInput(e.target.value),
++                                      onPaste: handlePaste,
++                                      onKeyDown: (e) => {
++                                        if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.nativeEvent.isComposing) {
++                                          e.preventDefault();
++                                          const el = e.target;
++                                          const form = el?.closest("form");
++                                          form?.requestSubmit();
++                                        }
++                                      },
++                                      placeholder: "Type your message...",
++                                      className: "chat-input-area field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
++                                    }
++                                  ),
++                                  stream.isLoading ? /* @__PURE__ */ jsxs22(
++                                    Button,
++                                    {
++                                      onClick: () => stream.stop(),
++                                      className: "chat-send-btn",
++                                      children: [
++                                        /* @__PURE__ */ jsx34(LoaderCircle, { className: "h-4 w-4 animate-spin" }),
++                                        "Cancel"
++                                      ]
+                                     },
+-                                    placeholder: "Type your message...",
+-                                    className: "field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
+-                                  }
+-                                ),
+-                                /* @__PURE__ */ jsxs22("div", { className: "flex items-center gap-6 p-2 pt-4", children: [
++                                    "stop"
++                                  ) : /* @__PURE__ */ jsx34(
++                                    Button,
++                                    {
++                                      type: "submit",
++                                      className: "chat-send-btn",
++                                      disabled: isLoading || !input.trim() && contentBlocks.length === 0,
++                                      children: "Send"
++                                    }
++                                  )
++                                ] }),
++                                /* @__PURE__ */ jsxs22("div", { className: "chat-input-actions flex items-center gap-6 p-2 pt-2", children: [
+                                   /* @__PURE__ */ jsx34("div", { children: /* @__PURE__ */ jsxs22("div", { className: "flex items-center space-x-2", children: [
+                                     /* @__PURE__ */ jsx34(
+                                       Switch,
+@@ -4498,26 +4528,6 @@ function Thread() {
+                                       accept: "image/jpeg,image/png,image/gif,image/webp,application/pdf",
+                                       className: "hidden"
+                                     }
+-                                  ),
+-                                  stream.isLoading ? /* @__PURE__ */ jsxs22(
+-                                    Button,
+-                                    {
+-                                      onClick: () => stream.stop(),
+-                                      className: "ml-auto",
+-                                      children: [
+-                                        /* @__PURE__ */ jsx34(LoaderCircle, { className: "h-4 w-4 animate-spin" }),
+-                                        "Cancel"
+-                                      ]
+-                                    },
+-                                    "stop"
+-                                  ) : /* @__PURE__ */ jsx34(
+-                                    Button,
+-                                    {
+-                                      type: "submit",
+-                                      className: "ml-auto shadow-md transition-all",
+-                                      disabled: isLoading || !input.trim() && contentBlocks.length === 0,
+-                                      children: "Send"
+-                                    }
+                                   )
+                                 ] })
+                               ]
