@@ -656,11 +656,6 @@ def get_fertilizer_recommendations(
         
         # General guidance
         "general_advice": [
-            "Test soil every 2-3 years to track changes",
-            "Apply fertilizers based on crop requirements",
-            "Split nitrogen applications for better efficiency",
-            "Consider soil moisture before fertilizer application",
-            "Keep records of all applications"
         ],
         
         # Target crop context (if provided)

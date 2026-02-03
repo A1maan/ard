@@ -7,6 +7,7 @@ from google.cloud import bigquery
 from typing import List, Dict, Any, Optional
 from fertilizer import get_fertilizer_recommendations
 from crops import get_crop_recommendations
+from tools.construction import get_construction_recommendations
 
 # BigQuery configuration
 PROJECT_ID = "qwiklabs-gcp-01-dd00ff0e4c0d"
@@ -74,6 +75,8 @@ def get_farm_by_id(row_id: int) -> Optional[Dict[str, Any]]:
     # Get recommendations
     fertilizer_result = get_fertilizer_recommendations(bigquery_row, target_crop="maize")
     crops_result = get_crop_recommendations(bigquery_row)
+    construction_result = get_construction_recommendations
+
     
     # Determine health status from fertilizer analysis
     farm_health = fertilizer_result.get("farm_soil_health", {})
@@ -102,6 +105,7 @@ def get_farm_by_id(row_id: int) -> Optional[Dict[str, Any]]:
         "healthScore": health_score,
         "farm_fertilizer_analysis": fertilizer_result,
         "farm_crop_analysis": crops_result,
+        "construction_predictions": construction_result,
         "raw_predictions": _extract_key_predictions(bigquery_row),
     }
 

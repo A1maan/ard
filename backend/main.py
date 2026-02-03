@@ -53,6 +53,7 @@ from utils import (
 
 from tools.crops import get_crop_recommendations
 from tools.fertilizer import get_fertilizer_recommendations, get_recommendations_simple
+from tools.construction import unwrap_to_bigquery_row, get_construction_recommendations
 
 
 # Windows event loop policy fix
@@ -414,6 +415,35 @@ async def build_agents(provider: str = "mistral"):
         )
         return json.dumps(result, ensure_ascii=False)
 
+    from typing import Dict
+    import ast
+    @tool
+    def get_construction_recommendations_from_file() -> Dict[str, Any]:
+        """
+        Load the farm value TXT (python dict literal), unwrap into BigQuery-like format,
+        and run construction recommendations.
+        """
+
+        # Works in scripts + notebooks
+        try:
+            base_dir = Path(__file__).resolve().parent
+        except NameError:
+            base_dir = Path.cwd()
+
+        file_path = base_dir / "farm_value_file.txt"
+
+        if not file_path.exists():
+            return {"error": "farm_value_file.txt not found", "searched_path": str(file_path)}
+
+        # Read and parse Python dict literal safely
+        text = file_path.read_text(encoding="utf-8").strip()
+        nested_row = ast.literal_eval(text)
+
+        bigquery_row = unwrap_to_bigquery_row(nested_row)
+        return get_construction_recommendations(bigquery_row)
+
+
+
     ###########################################################
 
     supervisor_server = tools_dir / "supervisor_tools_server.py"
@@ -544,7 +574,9 @@ async def build_agents(provider: str = "mistral"):
     # Create supervisor agent with HITL for ops_files tool
     supervisor = create_agent(
         model=llm,
-        tools=[*supervisor_native_tools, call_web_subagent, call_ops_subagent, crop_recommendations, fertilizer_recommendations],
+        tools=[*supervisor_native_tools, call_web_subagent, call_ops_subagent,
+                 crop_recommendations, fertilizer_recommendations, 
+                 get_construction_recommendations_from_file                     ],
         system_prompt=prompts["supervisor"]["system"],
         middleware=[
             *provider_middleware(provider),
