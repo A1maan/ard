@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, MessageCircle } from "lucide-react";
@@ -9,7 +9,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { MetricsSidebar } from "@/components/MetricsSidebar";
 import { SoilHeatmapLayer } from "@/components/SoilHeatmapLayer";
 import { api, type FarmDetail } from "@/lib/api";
-import { FARMS_DATA, type Farm } from "@/components/FarmsDropdown";
+import { FARMS_DATA } from "@/components/FarmsDropdown";
 
 export default function FarmPage() {
   const params = useParams();
@@ -20,7 +20,6 @@ export default function FarmPage() {
   const [error, setError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([24.7136, 46.6753]);
   const [mapZoom, setMapZoom] = useState(12);
-  const [mapInstance, setMapInstance] = useState<unknown>(null);
   
   const mapRef = useRef<SatelliteMapRef>(null);
 
@@ -55,10 +54,6 @@ export default function FarmPage() {
       }, 500);
     }
   }, [farm]);
-
-  const handleMapReady = useCallback((map: unknown) => {
-    setMapInstance(map);
-  }, []);
 
   if (loading) {
     return (
@@ -157,16 +152,10 @@ export default function FarmPage() {
             zoom={mapZoom}
             onCenterChange={setMapCenter}
             onZoomChange={setMapZoom}
-            onMapReady={handleMapReady}
-          />
-          
-          {!!mapInstance && (
-            <SoilHeatmapLayer
-              map={mapInstance}
-              farm={farm}
-              visible={true}
-            />
-          )}
+          >
+            {/* Soil heatmap rendered inside map context */}
+            <SoilHeatmapLayer farm={farm} visible={true} />
+          </SatelliteMap>
         </div>
       </div>
 

@@ -7,13 +7,11 @@ import { StatusBar } from "@/components/StatusBar";
 import { MiniMap } from "@/components/MiniMap";
 import { FarmMarkers } from "@/components/FarmMarkers";
 import { api, type FarmListItem } from "@/lib/api";
-import type L from "leaflet";
 
 export default function Home() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([24.7136, 46.6753]); // Saudi Arabia
   const [mapZoom, setMapZoom] = useState(5);
   const [farms, setFarms] = useState<FarmListItem[]>([]);
-  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
   const mapRef = useRef<SatelliteMapRef>(null);
 
@@ -28,10 +26,6 @@ export default function Home() {
       }
     }
     fetchFarms();
-  }, []);
-
-  const handleMapReady = useCallback((map: unknown) => {
-    setMapInstance(map as L.Map);
   }, []);
 
   const handleSearch = useCallback((query: string) => {
@@ -78,14 +72,10 @@ export default function Home() {
           zoom={mapZoom}
           onCenterChange={setMapCenter}
           onZoomChange={setMapZoom}
-          onMapReady={handleMapReady}
-        />
-
-        {/* Farm markers layer */}
-        <FarmMarkers 
-          map={mapInstance} 
-          farms={farms}
-        />
+        >
+          {/* Farm markers rendered inside map context */}
+          <FarmMarkers farms={farms} />
+        </SatelliteMap>
 
         <MiniMap center={mapCenter} />
 

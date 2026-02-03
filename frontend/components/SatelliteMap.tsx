@@ -1,11 +1,11 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
-import type { MapContainerRef } from "./MapContainer";
+import type { GoogleMapContainerRef } from "./GoogleMapContainer";
 
-// We need to dynamically import the map to avoid SSR issues with Leaflet
-const MapComponent = dynamic(() => import("./MapContainer"), {
+// Dynamically import Google Maps to avoid SSR issues
+const GoogleMapComponent = dynamic(() => import("./GoogleMapContainer"), {
   ssr: false,
   loading: () => (
     <div className="map-loading">
@@ -46,12 +46,13 @@ type SatelliteMapProps = {
   zoom?: number;
   onCenterChange?: (center: [number, number]) => void;
   onZoomChange?: (zoom: number) => void;
-  onMapReady?: (map: unknown) => void;
+  onMapReady?: (map: google.maps.Map) => void;
+  children?: ReactNode;
 };
 
 export type SatelliteMapRef = {
   flyTo: (center: [number, number], zoom: number) => void;
-  getMap: () => unknown | null;
+  getMap: () => google.maps.Map | null;
 };
 
 export const SatelliteMap = forwardRef<SatelliteMapRef, SatelliteMapProps>(
@@ -62,10 +63,11 @@ export const SatelliteMap = forwardRef<SatelliteMapRef, SatelliteMapProps>(
       onCenterChange,
       onZoomChange,
       onMapReady,
+      children,
     },
     ref
   ) {
-    const mapRef = useRef<MapContainerRef>(null);
+    const mapRef = useRef<GoogleMapContainerRef>(null);
     const [isReady, setIsReady] = useState(false);
     const pendingFlyToRef = useRef<{ center: [number, number]; zoom: number } | null>(null);
 
@@ -81,7 +83,7 @@ export const SatelliteMap = forwardRef<SatelliteMapRef, SatelliteMapProps>(
       getMap: () => mapRef.current?.getMap() ?? null,
     }));
 
-    const handleMapReady = (map: unknown) => {
+    const handleMapReady = (map: google.maps.Map) => {
       setIsReady(true);
       onMapReady?.(map);
       
@@ -94,14 +96,16 @@ export const SatelliteMap = forwardRef<SatelliteMapRef, SatelliteMapProps>(
 
     return (
       <div className="satellite-map-container">
-        <MapComponent
+        <GoogleMapComponent
           ref={mapRef}
           center={center}
           zoom={zoom}
           onCenterChange={onCenterChange}
           onZoomChange={onZoomChange}
           onMapReady={handleMapReady}
-        />
+        >
+          {children}
+        </GoogleMapComponent>
         <style jsx>{`
           .satellite-map-container {
             width: 100%;

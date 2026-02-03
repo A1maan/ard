@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useMap } from "@vis.gl/react-google-maps";
 import type { Farm } from "./FarmsDropdown";
 
 type SoilHeatmapLayerProps = {
-  map: unknown;
   farm: Farm | null;
   visible: boolean;
 };
@@ -12,82 +12,149 @@ type SoilHeatmapLayerProps = {
 // Generate heatmap points around a farm location
 const generateHeatmapPoints = (
   center: [number, number],
-  count: number = 50
-): [number, number, number][] => {
-  const points: [number, number, number][] = [];
+  healthScore: number,
+  count: number = 100
+): google.maps.LatLng[] => {
+  const points: google.maps.LatLng[] = [];
+  const healthFactor = healthScore / 100;
   
   for (let i = 0; i < count; i++) {
-    // Random offset within ~5km radius
-    const latOffset = (Math.random() - 0.5) * 0.1;
-    const lngOffset = (Math.random() - 0.5) * 0.1;
-    const intensity = 0.3 + Math.random() * 0.7; // Random intensity 0.3-1.0
+    // Gaussian-like distribution for natural clustering
+    const angle = Math.random() * 2 * Math.PI;
+    const radius = Math.abs(Math.random() + Math.random() + Math.random() - 1.5) * 0.04;
     
-    points.push([
-      center[0] + latOffset,
-      center[1] + lngOffset,
-      intensity,
-    ]);
+    const latOffset = radius * Math.cos(angle);
+    const lngOffset = radius * Math.sin(angle);
+    
+    points.push(
+      new google.maps.LatLng(center[0] + latOffset, center[1] + lngOffset)
+    );
+  }
+  
+  // Add more points near center for intensity
+  for (let i = 0; i < count * healthFactor; i++) {
+    const angle = Math.random() * 2 * Math.PI;
+    const radius = Math.abs(Math.random() * Math.random()) * 0.02;
+    
+    points.push(
+      new google.maps.LatLng(
+        center[0] + radius * Math.cos(angle),
+        center[1] + radius * Math.sin(angle)
+      )
+    );
   }
   
   return points;
 };
 
-export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) {
-  const markersRef = useRef<L.LayerGroup | null>(null);
-  const [leaflet, setLeaflet] = useState<typeof import("leaflet") | null>(null);
+// Create an SVG circle icon as a data URL
+function createCircleIcon(color: string): string {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+      <circle cx="10" cy="10" r="8" fill="${color}" stroke="white" stroke-width="2"/>
+    </svg>
+  `;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 
-  // Dynamically import Leaflet to avoid SSR issues
-  useEffect(() => {
-    import("leaflet").then((L) => {
-      setLeaflet(L.default);
-    });
-  }, []);
+// All-in-one component that manages heatmap, markers, and overlays
+function SoilHeatmapLayerInner({ farm, visible }: SoilHeatmapLayerProps) {
+  const map = useMap();
+  const heatmapRef = useRef<google.maps.visualization.HeatmapLayer | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const polygonRef = useRef<google.maps.Polygon | null>(null);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const labelMarkerRef = useRef<google.maps.Marker | null>(null);
 
   useEffect(() => {
-    if (!leaflet || !map || !farm || !visible) {
-      // Clean up if not visible
-      if (markersRef.current && map) {
-        (map as L.Map).removeLayer(markersRef.current);
-        markersRef.current = null;
-      }
+    if (!map || !farm || !visible) {
+      // Cleanup
+      heatmapRef.current?.setMap(null);
+      markersRef.current.forEach((m) => m.setMap(null));
+      polygonRef.current?.setMap(null);
+      labelMarkerRef.current?.setMap(null);
+      heatmapRef.current = null;
+      markersRef.current = [];
+      polygonRef.current = null;
+      labelMarkerRef.current = null;
       return;
     }
 
-    const leafletMap = map as L.Map;
+    // Clear existing
+    heatmapRef.current?.setMap(null);
+    markersRef.current.forEach((m) => m.setMap(null));
+    polygonRef.current?.setMap(null);
+    labelMarkerRef.current?.setMap(null);
+    markersRef.current = [];
 
-    // Clean up previous layer
-    if (markersRef.current) {
-      leafletMap.removeLayer(markersRef.current);
+    // Create shared InfoWindow
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new google.maps.InfoWindow();
     }
 
-    // Create heatmap points
-    const heatmapPoints = generateHeatmapPoints(farm.coordinates, 80);
-    
-    // Create circle markers with gradient for heatmap effect
-    const markers = leaflet.layerGroup();
-    
-    heatmapPoints.forEach(([lat, lng, intensity]) => {
-      // Determine color based on intensity and farm health
-      const healthFactor = farm.healthScore / 100;
-      const r = Math.round(255 * (1 - intensity * healthFactor));
-      const g = Math.round(180 * intensity * healthFactor);
-      const b = Math.round(50);
-      
-      const color = `rgba(${r}, ${g}, ${b}, ${intensity * 0.6})`;
-      
-      const circle = leaflet.circleMarker([lat, lng], {
-        radius: 15 + intensity * 20,
-        fillColor: color,
-        fillOpacity: 0.5,
-        stroke: false,
-        interactive: false,
-      });
-      
-      markers.addLayer(circle);
+    // Generate heatmap data points
+    const heatmapPoints = generateHeatmapPoints(farm.coordinates, farm.healthScore, 150);
+
+    // Determine gradient based on health status
+    let gradient: string[];
+    if (farm.healthScore >= 75) {
+      // Good - Green gradient
+      gradient = [
+        "rgba(0, 0, 0, 0)",
+        "rgba(74, 222, 128, 0.1)",
+        "rgba(74, 222, 128, 0.3)",
+        "rgba(34, 197, 94, 0.5)",
+        "rgba(22, 163, 74, 0.7)",
+      ];
+    } else if (farm.healthScore >= 50) {
+      // Warning - Yellow/Orange gradient
+      gradient = [
+        "rgba(0, 0, 0, 0)",
+        "rgba(250, 204, 21, 0.1)",
+        "rgba(250, 204, 21, 0.3)",
+        "rgba(245, 158, 11, 0.5)",
+        "rgba(234, 88, 12, 0.7)",
+      ];
+    } else {
+      // Critical - Red gradient
+      gradient = [
+        "rgba(0, 0, 0, 0)",
+        "rgba(248, 113, 113, 0.1)",
+        "rgba(248, 113, 113, 0.3)",
+        "rgba(239, 68, 68, 0.5)",
+        "rgba(220, 38, 38, 0.7)",
+      ];
+    }
+
+    // Create the heatmap layer
+    heatmapRef.current = new google.maps.visualization.HeatmapLayer({
+      data: heatmapPoints,
+      map,
+      radius: 40,
+      opacity: 0.6,
+      gradient,
     });
 
-    // Add soil sample markers (larger, more visible points)
-    const samplePoints = [
+    // Create farm boundary polygon
+    const boundaryPoints = [
+      { lat: farm.coordinates[0] + 0.05, lng: farm.coordinates[1] - 0.05 },
+      { lat: farm.coordinates[0] + 0.05, lng: farm.coordinates[1] + 0.05 },
+      { lat: farm.coordinates[0] - 0.05, lng: farm.coordinates[1] + 0.05 },
+      { lat: farm.coordinates[0] - 0.05, lng: farm.coordinates[1] - 0.05 },
+    ];
+
+    polygonRef.current = new google.maps.Polygon({
+      map,
+      paths: boundaryPoints,
+      strokeColor: "#4ade80",
+      strokeWeight: 2,
+      strokeOpacity: 0.8,
+      fillColor: "#4ade80",
+      fillOpacity: 0.05,
+    });
+
+    // Create soil sample markers
+    const samples = [
       { offset: [0, 0], value: farm.healthScore },
       { offset: [0.02, 0.02], value: farm.healthScore + 5 },
       { offset: [-0.02, 0.02], value: farm.healthScore - 8 },
@@ -97,81 +164,65 @@ export function SoilHeatmapLayer({ map, farm, visible }: SoilHeatmapLayerProps) 
       { offset: [-0.04, 0], value: farm.healthScore - 5 },
     ];
 
-    samplePoints.forEach(({ offset, value }) => {
+    samples.forEach(({ offset, value }) => {
       const clampedValue = Math.max(0, Math.min(100, value));
       const color = clampedValue > 75 ? "#4ade80" : clampedValue > 50 ? "#facc15" : "#f87171";
-      
-      const marker = leaflet.circleMarker(
-        [farm.coordinates[0] + offset[0], farm.coordinates[1] + offset[1]],
-        {
-          radius: 8,
-          fillColor: color,
-          fillOpacity: 0.9,
-          color: "#fff",
-          weight: 2,
-        }
-      );
-      
-      marker.bindPopup(`
-        <div style="text-align: center; padding: 4px;">
-          <strong>Soil Sample Point</strong><br/>
-          Health Score: <span style="color: ${color}; font-weight: bold;">${clampedValue}%</span>
-        </div>
-      `);
-      
-      markers.addLayer(marker);
+      const lat = farm.coordinates[0] + offset[0];
+      const lng = farm.coordinates[1] + offset[1];
+
+      const marker = new google.maps.Marker({
+        map,
+        position: { lat, lng },
+        icon: {
+          url: createCircleIcon(color),
+          scaledSize: new google.maps.Size(20, 20),
+          anchor: new google.maps.Point(10, 10),
+        },
+      });
+
+      marker.addListener("click", () => {
+        infoWindowRef.current?.setContent(`
+          <div style="text-align: center; padding: 4px;">
+            <strong>Soil Sample Point</strong><br/>
+            Health Score: <span style="color: ${color}; font-weight: bold;">${clampedValue}%</span>
+          </div>
+        `);
+        infoWindowRef.current?.open(map, marker);
+      });
+
+      markersRef.current.push(marker);
     });
 
-    // Add farm boundary polygon
-    const boundaryPoints: [number, number][] = [
-      [farm.coordinates[0] + 0.05, farm.coordinates[1] - 0.05],
-      [farm.coordinates[0] + 0.05, farm.coordinates[1] + 0.05],
-      [farm.coordinates[0] - 0.05, farm.coordinates[1] + 0.05],
-      [farm.coordinates[0] - 0.05, farm.coordinates[1] - 0.05],
-    ];
-    
-    const boundary = leaflet.polygon(boundaryPoints, {
-      color: "#4ade80",
-      weight: 2,
-      fillColor: "#4ade80",
-      fillOpacity: 0.1,
-      dashArray: "5, 10",
+    // Create farm label marker
+    labelMarkerRef.current = new google.maps.Marker({
+      map,
+      position: { lat: farm.coordinates[0], lng: farm.coordinates[1] },
+      icon: {
+        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>')}`,
+        scaledSize: new google.maps.Size(1, 1),
+      },
+      label: {
+        text: farm.name,
+        color: "#4ade80",
+        fontSize: "12px",
+        fontWeight: "600",
+        className: "farm-label-marker",
+      },
     });
-    
-    markers.addLayer(boundary);
-
-    // Add farm label
-    const farmLabel = leaflet.marker(farm.coordinates, {
-      icon: leaflet.divIcon({
-        className: "farm-label",
-        html: `<div style="
-          background: rgba(30, 30, 46, 0.9);
-          color: #4ade80;
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          white-space: nowrap;
-          border: 1px solid rgba(74, 222, 128, 0.3);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        ">${farm.name}</div>`,
-        iconSize: [0, 0],
-        iconAnchor: [0, -20],
-      }),
-    });
-    
-    markers.addLayer(farmLabel);
-
-    markers.addTo(leafletMap);
-    markersRef.current = markers;
 
     return () => {
-      if (markersRef.current) {
-        leafletMap.removeLayer(markersRef.current);
-        markersRef.current = null;
-      }
+      heatmapRef.current?.setMap(null);
+      markersRef.current.forEach((m) => m.setMap(null));
+      polygonRef.current?.setMap(null);
+      labelMarkerRef.current?.setMap(null);
+      infoWindowRef.current?.close();
     };
-  }, [leaflet, map, farm, visible]);
+  }, [map, farm, visible]);
 
   return null;
+}
+
+export function SoilHeatmapLayer({ farm, visible }: SoilHeatmapLayerProps) {
+  if (!farm || !visible) return null;
+  return <SoilHeatmapLayerInner farm={farm} visible={visible} />;
 }
