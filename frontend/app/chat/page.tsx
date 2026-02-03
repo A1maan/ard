@@ -523,6 +523,96 @@ export default function ChatPage() {
         .chat-page :global(a[href*="github.com/langchain-ai/agent-chat-ui"]:hover) {
           color: #ffffff;
         }
+
+
+        /* ===============================
+   Dark mode: Tool result blocks
+   =============================== */
+
+/* Tool result card */
+.chat-page
+  :global(.chat-message-row--assistant .border.border-gray-200) {
+  background: #232325 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  border-radius: 12px;
+}
+
+/* Tool result header */
+.chat-page
+  :global(.chat-message-row--assistant .bg-gray-50) {
+  background: #2a2b2d !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Tool result body */
+.chat-page
+  :global(.chat-message-row--assistant .bg-gray-100) {
+  background: #202124 !important;
+}
+
+/* Tool result text */
+.chat-page
+  :global(.chat-message-row--assistant .text-gray-900) {
+  color: #e8eaed !important;
+}
+
+.chat-page
+  :global(.chat-message-row--assistant .text-gray-500),
+.chat-page
+  :global(.chat-message-row--assistant .text-gray-600) {
+  color: #9aa0a6 !important;
+}
+
+/* Inline code blocks in tool result */
+.chat-page
+  :global(.chat-message-row--assistant code) {
+  background: rgba(255,255,255,0.06) !important;
+  color: #e8eaed !important;
+}
+
+/* Tool result expand/collapse button */
+.chat-page
+  :global(.chat-message-row--assistant button.border-gray-200) {
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #9aa0a6 !important;
+  background: #232325 !important;
+}
+
+/* Hover state for expand button */
+.chat-page
+  :global(.chat-message-row--assistant button.border-gray-200:hover) {
+  background: rgba(255,255,255,0.06) !important;
+  color: #e8eaed !important;
+}
+
+.chat-page
+  :global(.chat-message-row--assistant svg.lucide-chevron-down) {
+  transition: transform 0.2s ease;
+}
+
+/* ===============================
+   Scroll-to-bottom button
+   Hidden by default, show on hover
+   =============================== */
+
+/* Hide it completely by default */
+.chat-page
+  :global(button:has(svg.lucide-arrow-down)) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: opacity 0.2s ease;
+}
+
+/* Show it ONLY when hovering the chat area */
+.chat-page
+  :global(.chat-message-area:hover button:has(svg.lucide-arrow-down)) {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+
       `}</style>
     </div>
   );
