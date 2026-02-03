@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Search,
   Undo2,
@@ -39,23 +40,14 @@ export function EarthHeader({
       <div className="menu-bar">
         {/* Logo */}
         <div className="logo">
-          <div className="logo-icon">
-            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="24" cy="24" r="22" fill="url(#earthGradient)" />
-              <ellipse cx="24" cy="24" rx="22" ry="22" fill="url(#earthGradient)" />
-              <path
-                d="M8 24C8 24 12 16 24 16C36 16 40 24 40 24C40 24 36 32 24 32C12 32 8 24 8 24Z"
-                fill="rgba(255,255,255,0.3)"
-              />
-              <defs>
-                <linearGradient id="earthGradient" x1="0" y1="0" x2="48" y2="48">
-                  <stop offset="0%" stopColor="#4FC3F7" />
-                  <stop offset="50%" stopColor="#29B6F6" />
-                  <stop offset="100%" stopColor="#0288D1" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+          <Image
+            src="/ard-logo.png"
+            alt="ARD Logo"
+            width={120}
+            height={32}
+            className="logo-image"
+            priority
+          />
         </div>
 
         {/* Menu Items */}
@@ -142,22 +134,21 @@ export function EarthHeader({
           padding: 6px 12px;
           gap: 8px;
           height: 48px;
+          background: linear-gradient(90deg, rgba(74, 222, 128, 0.15) 0%, transparent 15%);
         }
 
         .logo {
           display: flex;
           align-items: center;
           margin-right: 8px;
+          padding: 4px 8px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 6px;
         }
 
-        .logo-icon {
-          width: 32px;
-          height: 32px;
-        }
-
-        .logo-icon svg {
-          width: 100%;
-          height: 100%;
+        .logo :global(.logo-image) {
+          height: 28px;
+          width: auto;
         }
 
         .menu-items {

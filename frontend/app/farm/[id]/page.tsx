@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { SatelliteMap, type SatelliteMapRef } from "@/components/SatelliteMap";
 import { StatusBar } from "@/components/StatusBar";
 import { MetricsSidebar } from "@/components/MetricsSidebar";
@@ -58,27 +59,15 @@ export default function FarmPage() {
   if (loading) {
     return (
       <div className="loading-page">
-        <Loader2 size={48} className="spin" />
-        <p>Loading farm data...</p>
+        <LoadingSpinner message="Loading farm data..." size="large" />
         <style jsx>{`
           .loading-page {
             width: 100vw;
             height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 16px;
             background: #1a1a2e;
-            color: #9aa0a6;
-          }
-          .loading-page :global(.spin) {
-            animation: spin 1s linear infinite;
-            color: #4ade80;
-          }
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
           }
         `}</style>
       </div>

@@ -3,38 +3,22 @@
 import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import type { GoogleMapContainerRef } from "./GoogleMapContainer";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 // Dynamically import Google Maps to avoid SSR issues
 const GoogleMapComponent = dynamic(() => import("./GoogleMapContainer"), {
   ssr: false,
   loading: () => (
     <div className="map-loading">
-      <div className="loading-spinner" />
-      <p>Loading satellite imagery...</p>
+      <LoadingSpinner message="Loading satellite imagery..." size="medium" />
       <style jsx>{`
         .map-loading {
           width: 100%;
           height: 100%;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
           background: #1a1a2e;
-          color: #9aa0a6;
-        }
-        .loading-spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid #3c4043;
-          border-top-color: #4fc3f7;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 16px;
-        }
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
         }
       `}</style>
     </div>

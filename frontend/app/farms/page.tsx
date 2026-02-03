@@ -19,7 +19,8 @@ export function ChatWidgetDemo(props: ChatWidgetProps) {
 
 
 import Link from "next/link";
-import { ArrowLeft, MapPin, Leaf, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Leaf, Plus } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { api, type FarmListItem } from "@/lib/api";
 import { FARMS_DATA } from "@/components/FarmsDropdown";
 
@@ -59,26 +60,14 @@ export default function FarmsPage() {
   if (loading) {
     return (
       <main className="farms-page loading">
-        <Loader2 size={48} className="spin" />
-        <p>Loading farms...</p>
+        <LoadingSpinner message="Loading farms..." size="large" />
         <style jsx>{`
           .farms-page.loading {
             min-height: 100vh;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 16px;
-            color: #9aa0a6;
-          }
-          .farms-page.loading :global(.spin) {
-            animation: spin 1s linear infinite;
-            color: #4ade80;
-          }
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
           }
         `}</style>
       </main>

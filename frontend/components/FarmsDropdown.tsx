@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, MapPin, Leaf, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { ChevronDown, MapPin, Leaf } from "lucide-react";
 import { api, type FarmListItem } from "@/lib/api";
 
 export type Farm = FarmListItem;
@@ -95,7 +96,13 @@ export function FarmsDropdown({
           <div className="dropdown-list">
             {loading ? (
               <div className="loading-state">
-                <Loader2 size={20} className="spin" />
+                <Image
+                  src="/ard-logo.png"
+                  alt="ARD"
+                  width={60}
+                  height={24}
+                  className="loading-logo"
+                />
                 <span>Loading farms...</span>
               </div>
             ) : error ? (
@@ -298,9 +305,10 @@ export function FarmsDropdown({
         .loading-state,
         .error-state {
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 12px;
           padding: 24px 16px;
           color: #9aa0a6;
           font-size: 13px;
@@ -310,13 +318,19 @@ export function FarmsDropdown({
           color: #f87171;
         }
 
-        .loading-state :global(.spin) {
-          animation: spin 1s linear infinite;
+        .loading-state :global(.loading-logo) {
+          animation: breathe 2s ease-in-out infinite;
         }
 
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes breathe {
+          0%, 100% {
+            opacity: 0.5;
+            transform: scale(0.95);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .dropdown-footer {
